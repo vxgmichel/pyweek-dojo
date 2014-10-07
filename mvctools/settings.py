@@ -4,7 +4,7 @@ from mvctools.common import xytuple, Color
 class BaseSettings(object):
     def __init__(self, control):
         self.control = control
-        self._fps = 40
+        self._fps = 60
         self._width = 1280
         self._height = 720
         self._fullscreen = False

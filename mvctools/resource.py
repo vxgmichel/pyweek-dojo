@@ -18,6 +18,8 @@ def walk(path):
 # Handler
 
 class ResourceHandler:
+
+    scale = pygame.transform.scale
     
     def __init__(self, directory):
         self._dir, self._subdirs, self._files = next(walk(directory))
@@ -230,7 +232,7 @@ class ResourceHandler:
         if size == raw_image.get_size():
             return raw_image
         # Scale image
-        return pygame.transform.smoothscale(raw_image, size)
+        return self.scale(raw_image, size)
 
     def load_font(self, name, size=72):
         if not pygame.font.get_init():

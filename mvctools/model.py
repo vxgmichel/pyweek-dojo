@@ -164,6 +164,11 @@ class BaseModel(object):
         # Call the corresponding method
         return getattr(self, method_name)(*args, **kwargs)
 
+    @property
+    def delta(self):
+        """Time difference with last update."""
+        return 1.0/self.state.current_fps
+
     def __iter__(self):
         """Iterator support.
 
@@ -325,8 +330,7 @@ class Timer(BaseModel):
             if callable(self._callback):
                 self._callback(self)
         # Prepare next increment
-        delta = 1.0/self.state.current_fps
-        self._next_increment = delta*self._ratio
+        self._next_increment = self.delta*self._ratio
 
 
 # Property from game data
