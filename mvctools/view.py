@@ -1,4 +1,5 @@
 import pygame as pg
+from math import ceil
 from pygame.sprite import LayeredDirty, DirtySprite
 from pygame import Rect, Surface, transform
 from functools import partial
@@ -22,7 +23,7 @@ class BaseView(object):
         # View-related attributes
         self.sprite_dct = {}
         self.group = AutoGroup()
-        self.screen = pg.display.get_surface()
+        self.screen = self.get_screen()
         self.background = self.get_background()
         self.first_update = True
         # Call user initialisation
@@ -31,22 +32,42 @@ class BaseView(object):
     def init(self):
         pass
 
+    def get_screen(self):
+        return pg.display.get_surface()
+    
     def get_background(self):
         image = self.resource.get(self.bgd_image) if self.bgd_image else None
-        return self.settings.scale_as_background(image, self.bgd_color)
+        return self.scale_as_background(image, self.bgd_color)
 
     def _reload(self):
         self.__init__(self, self.model)
 
     def _update(self):
-        # Handle parameter
+        # Handle first update
         self.group._use_update = not self.first_update
         self.first_update = False
         # Update, draw and display
         self.gen_sprites()
         self.group.update()
         dirty = self.group.draw(self.screen, self.background)
+        self.update_screen(dirty)
+        
+    def update_screen(self, dirty):
+        actual = pg.display.get_surface()
+        if actual != self.screen:
+            size = actual.get_size()
+            self.resource.scale(self.screen, size, actual)
+            self.update_dirty(dirty)
         pg.display.update(dirty)
+
+    def update_dirty(self, dirty):
+        actual = pg.display.get_surface()
+        actual_size = xytuple(*actual.get_size())
+        ratio = actual_size.map(float)/self.size
+        for rect in dirty:
+            topleft = (ratio * rect.topleft).map(int)
+            bottomright = (ratio * rect.bottomright).map(ceil)
+            rect.topleft, rect.size = topleft, bottomright - topleft
 
     def gen_sprites(self):
         for key,obj in self.model.get_model_dct():
@@ -65,6 +86,21 @@ class BaseView(object):
     def get_models_at(self, pos):
         return [sprite.model
                 for sprite in reversed(self.group.get_sprites_at(pos))]
+
+    @property
+    def size(self):
+        return self.screen.get_size()
+
+    def scale_as_background(self, image=None, color=None):
+        if not image and not color:
+            return None
+        color = Color(color)
+        bgd = pg.Surface(self.size)
+        bgd.fill(color)
+        if image is not None:
+            scaled = self.ressource.scale(image, self.size)
+            bgd.blit(scaled, scaled.get_rect())
+        return bgd
 
 
 

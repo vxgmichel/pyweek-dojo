@@ -97,15 +97,3 @@ class BaseSettings(object):
     def set_mode(self):
         flag = pygame.FULLSCREEN if self.fullscreen else 0
         pygame.display.set_mode(self.size, flag)
-        
-
-    def scale_as_background(self, image=None, color=None):
-        if not image and not color:
-            return None
-        color = Color(color)
-        bgd = pygame.Surface(self.size)
-        bgd.fill(color)
-        if image is not None:
-            scaled = pygame.transform.smoothscale(image, self.size)
-            bgd.blit(scaled, scaled.get_rect())
-        return bgd
