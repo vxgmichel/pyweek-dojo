@@ -98,7 +98,7 @@ class BaseView(object):
         bgd = pg.Surface(self.size)
         bgd.fill(color)
         if image is not None:
-            scaled = self.ressource.scale(image, self.size)
+            scaled = self.resource.scale(image, self.size)
             bgd.blit(scaled, scaled.get_rect())
         return bgd
 

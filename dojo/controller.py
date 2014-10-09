@@ -9,20 +9,28 @@ class DojoController(BaseController):
 
     axis_threshold = 0.5
 
-    key_dct = {pg.K_SPACE:  ("jump", 1),
-               pg.K_UP:     ("dir",  1),
-               pg.K_DOWN:   ("dir",  1),
-               pg.K_LEFT:   ("dir",  1),
-               pg.K_RIGHT:  ("dir",  1),}
+    key_dct = {pg.K_TAB:    ("jump", 1),
+               pg.K_RSHIFT: ("jump", 2),
+               pg.K_w:      ("dir",  1),
+               pg.K_a:      ("dir",  1),
+               pg.K_s:      ("dir",  1),
+               pg.K_d:      ("dir",  1),
+               pg.K_UP:     ("dir",  2),
+               pg.K_DOWN:   ("dir",  2),
+               pg.K_LEFT:   ("dir",  2),
+               pg.K_RIGHT:  ("dir",  2),}
 
-    dir_dict = {pg.K_UP:     Dir.UP,
-                pg.K_DOWN:   Dir.DOWN,
-                pg.K_LEFT:   Dir.LEFT,
-                pg.K_RIGHT:  Dir.RIGHT,}
+    dir_dict = {pg.K_w:     (Dir.UP,    1),
+                pg.K_a:     (Dir.LEFT,  1),
+                pg.K_s:     (Dir.DOWN,  1),
+                pg.K_d:     (Dir.RIGHT, 1),
+                pg.K_UP:    (Dir.UP,    2),
+                pg.K_LEFT:  (Dir.LEFT,  2),
+                pg.K_DOWN:  (Dir.DOWN,  2),
+                pg.K_RIGHT: (Dir.RIGHT, 2),}
 
     button_dct = {0: "jump",
-                  2: "jump",
-                 }
+                  2: "jump",}
 
     hat_action =  ("dir", xytuple(1, -1))
     axis_action = ("dir", xytuple(1, +1))
@@ -57,16 +65,19 @@ class DojoController(BaseController):
         return cmp(arg, 0) if abs(arg) >= self.axis_threshold else 0
 
     def register_key(self, key, down):
-        action, player = self.key_dct[key]
+        action, player = self.key_dct.get(key, (None, None))
+        if action is None:
+            return
         if player is None:
             return self.model.register(action)
         if action != "dir":
             return self.model.register(action, player, down)
-        return self.register(action, player, self.get_key_direction())
+        return self.register(action, player, self.get_key_direction(player))
 
-    def get_key_direction(self):
+    def get_key_direction(self, player):
         dct = pg.key.get_pressed()
-        gen = (value for key, value in self.dir_dict.items() if dct[key])
+        gen = (direc for key, (direc, play) in self.dir_dict.items()
+               if play == player and dct[key])
         return sum(gen, xytuple(0,0))
 
     def register_hat(self, hat, player):

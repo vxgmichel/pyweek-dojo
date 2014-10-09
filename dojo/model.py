@@ -9,11 +9,14 @@ from dojo.common import Dir
 class DojoModel(BaseModel):
     """Dojo model for the main game state."""
 
-    size = 200,100
+    ref = "room"
 
     def init(self):
+        self.resource = self.control.resource
+        self.size = self.resource.image.get(self.ref).get_size()
         self.rect = Rect((0,0), self.size)
-        self.players = {1:PlayerModel(self)}
+        self.border = BorderModel(self)
+        self.players = {i:PlayerModel(self, i) for i in (1,2)}
 
     def register_jump(self, player, down):
         player = self.players[player]
@@ -21,6 +24,15 @@ class DojoModel(BaseModel):
 
     def register_dir(self, player, direction):
         self.players[player].dir = direction
+
+
+# Border modem
+class BorderModel(BaseModel):
+
+    offset = -18, -15
+
+    def init(self):
+        self.rect = self.parent.rect.inflate(*self.offset)
 
         
         
@@ -37,12 +49,19 @@ class PlayerModel(BaseModel):
                    "left": Dir.LEFT,
                    "right": Dir.RIGHT,
                    "top": Dir.UP}
+
+    ref = "player_1"
     
-    def init(self):
+    def init(self, pid):
+        self.id = pid
+        self.border = self.parent.border
         self.resource = self.control.resource
-        self.size = self.resource.image.ash.get_size()
+        self.size = self.resource.image.get(self.ref).get_size()
         self.rect = Rect((0,0), self.size)
-        self.rect.bottomleft = self.parent.rect.bottomleft
+        if pid == 1:
+            self.rect.bottomleft = self.border.rect.bottomleft
+        else:
+            self.rect.bottomright = self.border.rect.bottomright
         self.speed = self.remainder = self.loading_speed = xytuple(0.0,0.0)
         self.dir = Dir.NONE
         self.pos = Dir.DOWN
@@ -69,12 +88,12 @@ class PlayerModel(BaseModel):
 
     def update_collision(self):
         collide_dct = dict(self.collide_dct.items())
-        while not self.parent.rect.contains(self.rect):
+        while not self.border.rect.contains(self.rect):
             self.fixed = True
             dct = {}
             for attr, direc in collide_dct.items():
                 rect = self.rect.copy()
-                value = getattr(self.parent.rect, attr)
+                value = getattr(self.border.rect, attr)
                 setattr(rect, attr, value)
                 distance = abs(xytuple(*rect.topleft) - self.rect.topleft)
                 dct[distance] = rect, direc, attr

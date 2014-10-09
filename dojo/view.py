@@ -12,10 +12,12 @@ class DojoSprite(AutoSprite):
 class PlayerSprite(AutoSprite):
     """Dojo sprite"""
 
-    filename = "ash"
+    filename = {1: "player_1",
+                2: "player_2",}
 
     def get_image(self):
-        return self.resource.image.getfile(self.filename)
+        filename = self.filename[self.model.id]
+        return self.resource.image.getfile(filename)
 
     def get_rect(self):
         return self.model.rect
@@ -24,7 +26,9 @@ class PlayerSprite(AutoSprite):
 # Dojo view
 class DojoView(BaseView):
     """Dojo view for the main game state."""
-    bgd_color = "lightgrey"
+    bgd_image = "image/room"
+    bgd_color = "darkgrey"
+    
     sprite_class_dct = {PlayerModel: PlayerSprite,
                         DojoModel: DojoSprite,}
 
