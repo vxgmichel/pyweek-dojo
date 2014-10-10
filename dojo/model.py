@@ -20,7 +20,8 @@ class DojoModel(BaseModel):
 
     def register_jump(self, player, down):
         player = self.players[player]
-        if down: player.jump()
+        player.load() if down else player.jump()
+            
 
     def register_dir(self, player, direction):
         self.players[player].dir = direction
@@ -40,9 +41,10 @@ class BorderModel(BaseModel):
 class PlayerModel(BaseModel):
     """Player model"""
 
-    air_friction = 0.5, 0.5 # s-1
-    gravity = 0, 981 # pixel/s-2
-    load_speed = 800 # pixel/s-2
+    air_friction = 0.5, 0.5  # s-1
+    gravity = 0, 981         # pixel/s-2
+    load_speed = 300         # pixel/s-2
+    init_speed = 400         # pixel/s
     max_loading_speed = 1000 # pixel/s
 
     collide_dct = {"bottom": Dir.DOWN,
@@ -62,14 +64,22 @@ class PlayerModel(BaseModel):
             self.rect.bottomleft = self.border.rect.bottomleft
         else:
             self.rect.bottomright = self.border.rect.bottomright
-        self.speed = self.remainder = self.loading_speed = xytuple(0.0,0.0)
+        self.speed = self.remainder = xytuple(0.0,0.0)
         self.dir = Dir.NONE
         self.pos = Dir.DOWN
         self.fixed = True
+        self.loading = False
+        self.loading_speed = 0.0
 
     @property
     def delta_tuple(self):
         return xytuple(self.delta, self.delta)
+
+
+    def load(self):
+        if self.fixed:
+            self.loading = True
+            self.loading_speed = self.init_speed
 
     def jump(self):
         if self.fixed:
@@ -80,11 +90,13 @@ class PlayerModel(BaseModel):
             if sum(self.dir*self.pos) <= 0 and any(dir_coef) and any(self.dir):
                 dir_coef /= (abs(dir_coef),)*2
                 # Update speed
-                self.speed += self.loading_speed * dir_coef
+                print self.loading_speed
+                self.speed += dir_coef * ((self.loading_speed,)*2)
             # Update status
             self.pos = Dir.NONE
             self.fixed = False
-            self.loading_speed *= (0,0)
+            self.loading = False
+            self.loading_speed = 0.0
 
     def update_collision(self):
         collide_dct = dict(self.collide_dct.items())
@@ -110,9 +122,9 @@ class PlayerModel(BaseModel):
         if self.fixed:
             self.speed *= 0,0
         # Update loading speed
-        if self.fixed:
-            self.loading_speed += self.delta_tuple * ((self.load_speed,)*2)
-        self.loading_speed = max(self.loading_speed, self.max_loading_speed)
+        if self.fixed and self.loading:
+            self.loading_speed += self.delta * self.load_speed
+        self.loading_speed = min(self.loading_speed, self.max_loading_speed)
         # Get step
         step = self.delta_tuple * self.speed
         step += self.remainder
