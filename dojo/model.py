@@ -43,8 +43,8 @@ class PlayerModel(BaseModel):
 
     air_friction = 0.5, 0.5  # s-1
     gravity = 0, 981         # pixel/s-2
-    load_speed = 300         # pixel/s-2
-    init_speed = 400         # pixel/s
+    load_speed = 600         # pixel/s-2
+    init_speed = 200         # pixel/s
     max_loading_speed = 1000 # pixel/s
 
     collide_dct = {"bottom": Dir.DOWN,
@@ -69,7 +69,7 @@ class PlayerModel(BaseModel):
         self.pos = Dir.DOWN
         self.fixed = True
         self.loading = False
-        self.loading_speed = 0.0
+        self.loading_speed = self.init_speed
 
     @property
     def delta_tuple(self):
@@ -77,9 +77,8 @@ class PlayerModel(BaseModel):
 
 
     def load(self):
-        if self.fixed:
-            self.loading = True
-            self.loading_speed = self.init_speed
+        self.loading = True
+        self.loading_speed = self.init_speed
 
     def jump(self):
         if self.fixed:
@@ -90,13 +89,11 @@ class PlayerModel(BaseModel):
             if sum(self.dir*self.pos) <= 0 and any(dir_coef) and any(self.dir):
                 dir_coef /= (abs(dir_coef),)*2
                 # Update speed
-                print self.loading_speed
                 self.speed += dir_coef * ((self.loading_speed,)*2)
             # Update status
             self.pos = Dir.NONE
             self.fixed = False
             self.loading = False
-            self.loading_speed = 0.0
 
     def update_collision(self):
         collide_dct = dict(self.collide_dct.items())
