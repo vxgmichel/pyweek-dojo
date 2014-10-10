@@ -15,9 +15,14 @@ class PlayerSprite(AutoSprite):
     filename = {1: "player_1",
                 2: "player_2",}
 
-    def get_image(self):
+    def init(self):
+        timer = self.model.timer
         filename = self.filename[self.model.id]
-        return self.resource.image.getfile(filename)
+        resource = self.resource.image.get(filename)
+        self.animation = self.build_animation(resource, timer=timer)
+
+    def get_image(self):
+        return self.animation.get()
 
     def get_rect(self):
         return self.model.rect

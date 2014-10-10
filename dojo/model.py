@@ -2,7 +2,7 @@
 
 # Imports
 from pygame import Rect
-from mvctools import BaseModel, xytuple
+from mvctools import BaseModel, xytuple, Timer
 from dojo.common import Dir
 
 # Dojo model
@@ -41,11 +41,17 @@ class BorderModel(BaseModel):
 class PlayerModel(BaseModel):
     """Player model"""
 
+    # Physics
     air_friction = 0.5, 0.5  # s-1
     gravity = 0, 981         # pixel/s-2
     load_speed = 600         # pixel/s-2
     init_speed = 200         # pixel/s
     max_loading_speed = 1000 # pixel/s
+
+    # Animation
+    period = 2.0 # s
+    load_factor_min = 5
+    load_factor_max = 10
 
     collide_dct = {"bottom": Dir.DOWN,
                    "left": Dir.LEFT,
@@ -58,7 +64,7 @@ class PlayerModel(BaseModel):
         self.id = pid
         self.border = self.parent.border
         self.resource = self.control.resource
-        self.size = self.resource.image.get(self.ref).get_size()
+        self.size = self.resource.image.get(self.ref)[0].get_size()
         self.rect = Rect((0,0), self.size)
         if pid == 1:
             self.rect.bottomleft = self.border.rect.bottomleft
@@ -70,6 +76,8 @@ class PlayerModel(BaseModel):
         self.fixed = True
         self.loading = False
         self.loading_speed = self.init_speed
+        self.timer = Timer(self, stop=self.period, periodic=True)
+        self.timer.start()
 
     @property
     def delta_tuple(self):
@@ -78,7 +86,7 @@ class PlayerModel(BaseModel):
 
     def load(self):
         self.loading = True
-        self.loading_speed = self.init_speed
+
 
     def jump(self):
         if self.fixed:
@@ -93,7 +101,9 @@ class PlayerModel(BaseModel):
             # Update status
             self.pos = Dir.NONE
             self.fixed = False
-            self.loading = False
+        # Reset loading
+        self.loading = False
+        self.loading_speed = self.init_speed
 
     def update_collision(self):
         collide_dct = dict(self.collide_dct.items())
@@ -108,7 +118,11 @@ class PlayerModel(BaseModel):
                 dct[distance] = rect, direc, attr
             self.rect, self.pos, attr = dct[min(dct)]
             del collide_dct[attr]
-            
+
+    @property
+    def loading_ratio(self):
+        res = float(self.loading_speed - self.init_speed)
+        return res / (self.max_loading_speed - self.init_speed)
 
     def update(self):
         # Get acc
@@ -130,6 +144,10 @@ class PlayerModel(BaseModel):
         # Update rect
         self.rect.move_ip(intstep)
         self.update_collision()
+        # Update timer
+        delta = self.load_factor_max - self.load_factor_min
+        ratio = self.load_factor_min + self.loading_ratio * delta
+        self.timer.start(ratio if self.loading_ratio else 1)
         
     
         
