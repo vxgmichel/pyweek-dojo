@@ -3,7 +3,7 @@ pyweek-dojo
 
 A minimalistic versus fighting game (and a Pyweek 19 entry) 
 
-![Screenshot](/screenshot.png?raw=true "ScreenShot")
+![Screenshot](/resource/image/screenshot.png?raw=true "ScreenShot")
 
 ## Requirement
 
