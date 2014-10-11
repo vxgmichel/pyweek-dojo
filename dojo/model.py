@@ -24,13 +24,13 @@ class DojoModel(BaseModel):
             
 
     def register_dir(self, player, direction):
-        self.players[player].dir = direction
+        self.players[player].control_dir = direction
 
 
 # Border modem
 class BorderModel(BaseModel):
 
-    offset = -18, -15
+    offset = -14, -15
 
     def init(self):
         self.rect = self.parent.rect.inflate(*self.offset)
@@ -71,7 +71,7 @@ class PlayerModel(BaseModel):
         else:
             self.rect.bottomright = self.border.rect.bottomright
         self.speed = self.remainder = xytuple(0.0,0.0)
-        self.dir = Dir.NONE
+        self.control_dir = Dir.NONE
         self.pos = Dir.DOWN
         self.fixed = True
         self.loading = False
@@ -87,20 +87,17 @@ class PlayerModel(BaseModel):
     def load(self):
         self.loading = True
 
-
     def jump(self):
         if self.fixed:
-            # Get coeff
-            sign = lambda arg: cmp(arg, 0)
-            dir_coef = self.dir - self.pos
-            dir_coef = dir_coef.map(sign)
-            if sum(self.dir*self.pos) <= 0 and any(dir_coef) and any(self.dir):
+            dir_coef = self.current_dir
+            if any(dir_coef):
                 dir_coef /= (abs(dir_coef),)*2
                 # Update speed
                 self.speed += dir_coef * ((self.loading_speed,)*2)
             # Update status
-            self.pos = Dir.NONE
-            self.fixed = False
+            if self.pos != Dir.DOWN or any(dir_coef):
+                self.pos = Dir.NONE
+                self.fixed = False
         # Reset loading
         self.loading = False
         self.loading_speed = self.init_speed
@@ -123,6 +120,26 @@ class PlayerModel(BaseModel):
     def loading_ratio(self):
         res = float(self.loading_speed - self.init_speed)
         return res / (self.max_loading_speed - self.init_speed)
+
+    @property
+    def current_dir(self):
+        # Static case
+        if self.fixed:
+            if not any(self.control_dir) or \
+               sum(self.control_dir*self.pos) > 0:
+                return xytuple(0,0)
+            current_dir = self.control_dir - self.pos
+            sign = lambda arg: cmp(arg, 0)
+            return current_dir.map(sign)
+        # Dynamic case
+        if not any(self.speed):
+            return xytuple(0,0)
+        norm = self.speed / ((abs(self.speed),)*2)
+        _, x, y = min((abs(norm - (x,y)), x, y)
+                          for x in range(-1,2)
+                              for y in range(-1,2))
+        return xytuple(x,y)
+            
 
     def update(self):
         # Get acc
