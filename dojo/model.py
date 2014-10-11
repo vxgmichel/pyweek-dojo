@@ -1,7 +1,7 @@
 """Contain the model for the main game state."""
 
 # Imports
-from pygame import Rect
+from pygame import Rect, Color
 from mvctools import BaseModel, xytuple, Timer
 from dojo.common import Dir
 
@@ -35,8 +35,17 @@ class BorderModel(BaseModel):
     def init(self):
         self.rect = self.parent.rect.inflate(*self.offset)
 
+
+class RectModel(BaseModel):
+
+    def init(self, attr, color):
+        self.attr = attr
+        self.color = color
         
-        
+    @property
+    def rect(self):
+        return getattr(self.parent, self.attr)
+    
 # Player model
 class PlayerModel(BaseModel):
     """Player model"""
@@ -53,10 +62,23 @@ class PlayerModel(BaseModel):
     load_factor_min = 5
     load_factor_max = 10
 
-    collide_dct = {"bottom": Dir.DOWN,
-                   "left": Dir.LEFT,
-                   "right": Dir.RIGHT,
-                   "top": Dir.UP}
+    # Debu
+    display_hitbox = True
+
+    collide_dct = {Dir.DOWN: "bottom",
+                   Dir.LEFT: "left",
+                   Dir.RIGHT: "right",
+                   Dir.UP: "top",}
+
+    attr_dct =   {Dir.NONE:  "center",
+                  Dir.DOWN:  "midbottom",
+                  Dir.LEFT:  "midleft",
+                  Dir.RIGHT: "midright",
+                  Dir.UP:    "midtop",
+                  ( 1,  1):  "bottomright",
+                  ( 1, -1):  "topright",
+                  (-1,  1):  "bottomleft",
+                  (-1, -1):  "topleft",}
 
     ref = "player_1"
     
@@ -78,6 +100,10 @@ class PlayerModel(BaseModel):
         self.loading_speed = self.init_speed
         self.timer = Timer(self, stop=self.period, periodic=True)
         self.timer.start()
+        if self.display_hitbox:
+            RectModel(self, "head", Color("red"))
+            RectModel(self, "body", Color("green"))
+            RectModel(self, "legs", Color("blue"))
 
     @property
     def delta_tuple(self):
@@ -107,14 +133,14 @@ class PlayerModel(BaseModel):
         while not self.border.rect.contains(self.rect):
             self.fixed = True
             dct = {}
-            for attr, direc in collide_dct.items():
+            for direc, attr in collide_dct.items():
                 rect = self.rect.copy()
                 value = getattr(self.border.rect, attr)
                 setattr(rect, attr, value)
                 distance = abs(xytuple(*rect.topleft) - self.rect.topleft)
                 dct[distance] = rect, direc, attr
-            self.rect, self.pos, attr = dct[min(dct)]
-            del collide_dct[attr]
+            self.rect, self.pos, _ = dct[min(dct)]
+            del collide_dct[self.pos]
 
     @property
     def loading_ratio(self):
@@ -139,7 +165,30 @@ class PlayerModel(BaseModel):
                           for x in range(-1,2)
                               for y in range(-1,2))
         return xytuple(x,y)
-            
+
+    def get_rect_from_dir(self, direction):
+        size = xytuple(*self.size) / (2,2)
+        attr = self.attr_dct[direction]
+        rect = Rect((0,0), size)
+        value = getattr(self.rect, attr)
+        setattr(rect, attr, value)
+        return rect
+
+    @property
+    def head(self):
+        if self.fixed:       
+            return self.get_rect_from_dir(self.pos * (-1,-1))
+        return self.get_rect_from_dir(self.current_dir * (-1,-1))
+
+    @property
+    def body(self):
+        return self.get_rect_from_dir(Dir.NONE)
+
+    @property
+    def legs(self):
+        if self.fixed:       
+            return self.get_rect_from_dir(self.pos)
+        return self.get_rect_from_dir(self.current_dir)
 
     def update(self):
         # Get acc

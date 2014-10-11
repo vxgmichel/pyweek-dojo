@@ -1,10 +1,11 @@
 """Contain the view for the main game state."""
 
 # Imports
+import pygame as pg
 from collections import defaultdict
-from pygame import Rect, Surface, transform
+from pygame import Rect, Surface, transform, draw, Color
 from mvctools import BaseView, AutoSprite, xytuple
-from dojo.model import DojoModel, PlayerModel
+from dojo.model import DojoModel, PlayerModel, RectModel
 from dojo.common import Dir
 
 # Dojo sprite
@@ -49,7 +50,6 @@ class PlayerSprite(AutoSprite):
         else:
             key = 0, cmp(speed.y, 0)
         return self.resource_dct[self.jump_convert_dct[key]]
-        
 
     def init(self):
         timer = self.model.timer
@@ -57,18 +57,30 @@ class PlayerSprite(AutoSprite):
         resource = self.resource.image.get(filename)
         self.resource_dct = self.generate_animation_dct(resource, timer)
 
-
-    @property
-    def flip(self):
-        if self.model.fixed:
-            return self.pos
-        return 
-
     def get_image(self):
+        screen = self.parent.screen
+        draw.rect(screen, Color("red"), self.model.head, 1)
+        draw.rect(screen, Color("green"), self.model.body, 1)
+        draw.rect(screen, Color("blue"), self.model.legs, 1)
         return self.get_animation().get()
 
     def get_rect(self):
         return self.model.rect
+
+class RectSprite(AutoSprite):
+
+    def get_rect(self):
+        return self.model.rect
+
+    def get_layer(self):
+        return 9**9
+
+    def get_image(self):
+        img = Surface(self.rect.size).convert_alpha()
+        img.fill((0,0,0,0), special_flags=pg.BLEND_RGBA_MULT)
+        draw.rect(img, self.model.color, img.get_rect(), 1)
+        img.fill((255,255,255,128), special_flags=pg.BLEND_RGBA_MULT)
+        return img
 
 
 
@@ -79,7 +91,8 @@ class DojoView(BaseView):
     bgd_color = "darkgrey"
     
     sprite_class_dct = {PlayerModel: PlayerSprite,
-                        DojoModel: DojoSprite,}
+                        DojoModel: DojoSprite,
+                        RectModel: RectSprite}
 
     def get_screen(self):
         return Surface(self.model.size)
