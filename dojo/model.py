@@ -10,6 +10,7 @@ class DojoModel(BaseModel):
     """Dojo model for the main game state."""
 
     ref = "room"
+    damping = 0.8
 
     def init(self):
         self.resource = self.control.resource
@@ -17,6 +18,8 @@ class DojoModel(BaseModel):
         self.rect = Rect((0,0), self.size)
         self.border = BorderModel(self)
         self.players = {i:PlayerModel(self, i) for i in (1,2)}
+        self.coliding = False
+
 
     def register_jump(self, player, down):
         player = self.players[player]
@@ -25,6 +28,24 @@ class DojoModel(BaseModel):
 
     def register_dir(self, player, direction):
         self.players[player].control_dir = direction
+
+    def update(self):
+        hit = {}
+        for i in (1,2):
+            j = 2 if i==1 else 1
+            lst = [self.players[j].legs, self.players[j].body, self.players[j].head]
+            index = self.players[i].legs.collidelist(lst)
+            hit[i] = index > 0
+            tie = not index
+        colide = tie or any(hit.values())
+        if colide and not self.coliding:
+            if hit[1]: print "1 hit 2 !!"
+            if hit[2]: print "2 hit 1 !!"
+            for player in self.players.values():
+                player.speed *= (-self.damping,)*2
+                self.coliding = True
+        elif not colide:
+            self.coliding = False
 
 
 # Border modem
@@ -63,7 +84,7 @@ class PlayerModel(BaseModel):
     load_factor_max = 10
 
     # Debu
-    display_hitbox = True
+    display_hitbox = False
 
     collide_dct = {Dir.DOWN: "bottom",
                    Dir.LEFT: "left",
