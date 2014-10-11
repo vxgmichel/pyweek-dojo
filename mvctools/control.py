@@ -28,7 +28,7 @@ class BaseControl:
        (default is BaseGamedata)
      - **fist_state** : Class of the first state to instantiate and run.
        (default is None)
-     - **resource_dict** : name of the resource folder
+     - **resource_dir** : name of the resource folder
        (default is "resource")
      - **window_title** : title of the window
        (default is "Pygame")
@@ -71,7 +71,7 @@ class BaseControl:
     settings_class = BaseSettings
     gamedata_class = BaseGamedata
     first_state = None
-    resource_dict = "resource"
+    resource_dir = "resource"
     window_title = "Pygame"
     display_fps = True
     
@@ -80,7 +80,7 @@ class BaseControl:
         self.next_state = self.first_state
         self.settings = self.settings_class(self)
         self.gamedata = self.gamedata_class()
-        self.resource = ResourceHandler(self.resource_dict)
+        self.resource = ResourceHandler(self.resource_dir)
         self.current_state = None
         self.state_stack = []
 
