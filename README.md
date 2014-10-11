@@ -30,6 +30,6 @@ Player 1:
  - Move : WASD 
  - Jump : Tab
  
- Player 1:
+Player 2:
  - Move : Arrows 
  - Jump : RightShift
