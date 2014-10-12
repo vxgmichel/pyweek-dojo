@@ -30,16 +30,20 @@ and ceiling of the room to jump on your opponent.
 	
 ## Gameplay
 
-In a given position, 4 types of move are available:
- - Jump at 0 degree
- - Jump at - 45 degrees
- - Jump at + 45 degrees 
- - Let yourself down
- 
-Also note:
- - Jump can be loaded by keeping the jump button pressed
- - A player is considered KO he's hit by the legs of the attacking player.
+ - Since it's a versus fighting game, you need to be two players.
+ - The characters can't walk, run or hit. Only jump.
+ - If they touch a wall or the ceiling, they'll automatically grab it.
+ - In a given position, 4 directions are available:
+    - Jump at 0 degree
+    - Jump at - 45 degrees
+    - Jump at + 45 degrees
+    - Or let yourself down
+ - It is possible to jump higher by keeping the jump button pressed.
+ - A player is considered KO when he's hit by the legs of the attacking player.
  - When players jump onto each other, they bounce.
+ - To start a new match, reset by pressing "R".
+ - Counters on the wall keep track of the score.
+ - Controllers are supported (reset to detect new controllers).
 	
 ## Controls
 
@@ -58,6 +62,7 @@ Also note:
  
 **General:**
   - Reset : R
+  - Quit : Escape
   
 ## Repository
 
