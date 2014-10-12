@@ -34,5 +34,5 @@ A minimalistic versus fighting game (and a Pyweek 19 entry)
  - Move : Arrows 
  - Jump : RightShift
  
- **General:**
+**General:**
   - Reset : R
