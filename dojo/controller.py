@@ -114,6 +114,11 @@ class DojoController(BaseController):
         raw_values = [self.joysticks[joy].get_axis(i) for i in (0,1)]
         direction = convert * map(self.axis_position, raw_values)
         return self.model.register(action, player, direction)
+
+    def is_quit_event(self, event):
+        """Consider ESCAPE as a quit event."""
+        res = (event.type == pg.KEYDOWN) and (event.key == pg.K_ESCAPE)
+        return res or BaseController.is_quit_event(self, event)
     
             
             
