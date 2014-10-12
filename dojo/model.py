@@ -270,10 +270,8 @@ class PlayerModel(BaseModel):
     @property
     def legs(self):
         """Legs hitbox."""
-        if self.ko:
+        if self.ko or self.fixed:
             return Rect(0,0,0,0)
-        if self.fixed:       
-            return self.get_rect_from_dir(self.pos)
         return self.get_rect_from_dir(self.current_dir)
 
     def update(self):
