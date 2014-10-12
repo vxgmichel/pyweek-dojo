@@ -15,6 +15,9 @@ class DojoModel(BaseModel):
     # Damping when two players collide
     damping = 0.8
 
+    # Title
+    text = "Dojo"
+
     def init(self):
         """Initialize players and borders."""
         self.resource = self.control.resource
@@ -103,7 +106,7 @@ class PlayerModel(BaseModel):
     load_factor_max = 10 # period-1
 
     # Hitbox
-    display_hitbox = True
+    display_hitbox = False
     hitbox_ratio = 0.25
 
     # Direction to Rect attributes for wall collision

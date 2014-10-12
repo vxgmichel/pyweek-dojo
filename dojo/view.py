@@ -5,13 +5,109 @@ import pygame as pg
 from collections import defaultdict
 from pygame import Rect, Surface, transform, draw, Color
 from mvctools import BaseView, AutoSprite, xytuple
+from mvctools.utils import RendererSprite
 from dojo.model import DojoModel, PlayerModel, RectModel
 from dojo.common import Dir
 
+# Line sprite
+class LineSprite(RendererSprite):
+    """Line of text."""
+
+    # Font settings
+    font_folder = "font"
+    font_name = "visitor2"
+    font_size = 20
+    font_color = "white"
+    font_opacity = 0.3
+    margin = 3
+
+    def get_center(self):
+        """Return the enter of the sprite."""
+        return 0,0
+
+    def init(self, text, left=True, link=False):
+        """Initialize the sprite."""
+        RendererSprite.init(self)
+        self.image = self.renderer(text)
+        if link and left:
+            self.rect = self.image.get_rect(topleft=self.parent.rect.bottomleft)
+            self.rect.top -= self.margin
+        elif link:
+            self.rect = self.image.get_rect(topright=self.parent.rect.bottomright)
+            self.rect.top -= self.margin
+        else:
+            self.rect = self.image.get_rect(center=self.get_center())
+
 
 # Dojo sprite
-class DojoSprite(AutoSprite):
-    """Dojo sprite. Nothing implemented yet."""
+class MultilineSprite(LineSprite):
+    """Several lines of text."""
+
+    def init(self, text, left=True, link=False):
+        """Initialize the sprite."""
+        if isinstance(text, basestring):
+            text = text.split('\n')
+        if not len(text):
+            return
+        LineSprite.init(self, text[0], left=left, link=link)
+        text = text[1:]
+        if not len(text):
+            return
+        type(self)(self, text, left=left, link=True)
+
+
+# Dojo sprite
+class DojoSprite(MultilineSprite):
+    """Title sprite."""
+
+    string_dct = {1: ("P1\n-WASD-\nTABKEY", True),
+                  2: ("P2\nARROWS\nRSHIFT", False),}
+
+    def init(self):
+        """Initialize the sprite."""
+        MultilineSprite.init(self, self.model.text)
+        for key, (string, left) in self.string_dct.items():
+            ControlSprite(self, string, left=left, player=key)
+        ResetSprite(self, "RESET:R")
+
+    def get_center(self):
+        """Return the enter of the sprite."""
+        center = xytuple(*self.model.rect.center)
+        return center * (1, 0.6)
+
+
+# Reset sprite
+class ResetSprite(MultilineSprite):
+    """Reset line."""
+    
+    font_size = 12
+    pos = 0.5, 0.42
+    
+    def init(self, text, player=None, left=True, link=False):
+        """Initialize the sprite."""
+        self.player = player
+        MultilineSprite.init(self, text, left, link)
+
+    def get_center(self):
+        """Return the enter of the sprite."""
+        return xytuple(*self.model.rect.bottomright) * self.pos
+
+
+# Control sprite
+class ControlSprite(MultilineSprite):
+    """Control sprite"""
+    font_size = 12
+
+    pos_dct = {1: (0.2, 0.6),
+               2: (0.8, 0.6)}
+    
+    def init(self, text, player=None, left=True, link=False):
+        self.player = player
+        MultilineSprite.init(self, text, left, link)
+
+    def get_center(self):
+        size = xytuple(*self.model.rect.bottomright)
+        return size * self.pos_dct[self.player]
 
 
 # Player sprite
