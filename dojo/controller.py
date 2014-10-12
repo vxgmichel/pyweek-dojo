@@ -101,7 +101,7 @@ class DojoController(BaseController):
 
     def register_button(self, button, player, down):
         """Register a button event."""
-        action, general = self.button_dct.get(button)
+        action, general = self.button_dct.get(button, (None,None))
         if action and general:
             if not down: return
             return self.model.register(action)
