@@ -28,15 +28,24 @@ class LineSprite(RendererSprite):
     def init(self, text, left=True, link=False):
         """Initialize the sprite."""
         RendererSprite.init(self)
-        self.image = self.renderer(text)
-        if link and left:
-            self.rect = self.image.get_rect(topleft=self.parent.rect.bottomleft)
-            self.rect.top -= self.margin
-        elif link:
-            self.rect = self.image.get_rect(topright=self.parent.rect.bottomright)
-            self.rect.top -= self.margin
+        self.text = text
+        self.left = left
+        self.link = link
+        
+    def get_image(self):
+        text = self.text() if callable(self.text) else self.text
+        return self.renderer(text)
+
+    def get_rect(self):
+        if self.link and self.left:
+            rect = self.image.get_rect(topleft=self.parent.rect.bottomleft)
+            rect.top -= self.margin
+        elif self.link:
+            rect = self.image.get_rect(topright=self.parent.rect.bottomright)
+            rect.top -= self.margin
         else:
-            self.rect = self.image.get_rect(center=self.get_center())
+            rect = self.image.get_rect(center=self.get_center())
+        return rect
 
 
 # Dojo sprite
@@ -68,7 +77,13 @@ class DojoSprite(MultilineSprite):
         MultilineSprite.init(self, self.model.text)
         for key, (string, left) in self.string_dct.items():
             ControlSprite(self, string, left=left, player=key)
+            func = self.get_gen_score(key)
+            ScoreSprite(self, func, player=key)
         ResetSprite(self, "RESET:R")
+
+    def get_gen_score(self, player):
+        """Generate a callable that return the current score."""
+        return lambda: "{:02}".format(self.model.score_dct[player])
 
     def get_center(self):
         """Return the enter of the sprite."""
@@ -77,20 +92,35 @@ class DojoSprite(MultilineSprite):
 
 
 # Reset sprite
-class ResetSprite(MultilineSprite):
+class ResetSprite(LineSprite):
     """Reset line."""
-    
+
+    # Settings
     font_size = 12
     pos = 0.5, 0.42
-    
-    def init(self, text, player=None, left=True, link=False):
-        """Initialize the sprite."""
-        self.player = player
-        MultilineSprite.init(self, text, left, link)
 
     def get_center(self):
         """Return the enter of the sprite."""
         return xytuple(*self.model.rect.bottomright) * self.pos
+
+# Score sprite
+class ScoreSprite(LineSprite):
+    """Score sprite"""
+
+    # Settings
+    font_size = 20
+    pos_dct = {1: (0.2, 0.4),
+               2: (0.8, 0.4)}
+    
+    def init(self, text, player=None, left=True, link=False):
+        """Initialize the sprite."""
+        self.player = player
+        LineSprite.init(self, text, left, link)
+
+    def get_center(self):
+        """Return the enter of the sprite."""
+        size = xytuple(*self.model.rect.bottomright)
+        return size * self.pos_dct[self.player]
 
 
 # Control sprite

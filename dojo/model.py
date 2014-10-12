@@ -2,7 +2,7 @@
 
 # Imports
 from pygame import Rect, Color
-from mvctools import BaseModel, xytuple, Timer
+from mvctools import BaseModel, xytuple, Timer, property_from_gamedata
 from dojo.common import Dir
 
 # Dojo model
@@ -27,7 +27,10 @@ class DojoModel(BaseModel):
         self.players = {i:PlayerModel(self, i) for i in (1,2)}
         self.colliding = False
 
-
+    @property_from_gamedata("score_dct")
+    def score_dct(self):
+        return {i:0 for i in (1,2)}
+    
     def register_jump(self, player, down):
         """Register a jump from the controller."""
         player = self.players[player]
@@ -53,10 +56,12 @@ class DojoModel(BaseModel):
             tie = not index
         collide = tie or any(hit.values())
         if collide and not self.colliding:
-            if hit[1]:
-                self.players[2].set_ko()
-            if hit[2]:
-                self.players[1].set_ko()
+            for i in (1,2):
+                j = 2 if i==1 else 1
+                if hit[i] and not hit[j]:
+                    self.score_dct[i] += 1
+                if hit[i]:
+                    self.players[j].set_ko()
             for player in self.players.values():
                 player.speed *= (-self.damping,)*2
                 self.colliding = True

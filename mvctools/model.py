@@ -349,7 +349,7 @@ def property_from_gamedata(name):
 
     Example: ::
 
-        @property_from_gamedata("player_score"):
+        @property_from_gamedata("player_score")
         def score(self):
             return 0
     """
