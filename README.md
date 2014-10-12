@@ -26,10 +26,13 @@ A minimalistic versus fighting game (and a Pyweek 19 entry)
 	
 ## Controls
 
-**Player 1**:
+**Player 1:**
  - Move : WASD 
  - Jump : Tab
  
-**Player 2**:
+**Player 2:**
  - Move : Arrows 
  - Jump : RightShift
+ 
+ **General:**
+  - Reset : R

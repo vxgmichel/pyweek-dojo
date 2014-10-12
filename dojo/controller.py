@@ -18,7 +18,8 @@ class DojoController(BaseController):
                pg.K_UP:     ("dir",  2),
                pg.K_DOWN:   ("dir",  2),
                pg.K_LEFT:   ("dir",  2),
-               pg.K_RIGHT:  ("dir",  2),}
+               pg.K_RIGHT:  ("dir",  2),
+               pg.K_r:      ("reset", None)}
 
     dir_dict = {pg.K_w:     (Dir.UP,    1),
                 pg.K_a:     (Dir.LEFT,  1),
@@ -69,6 +70,8 @@ class DojoController(BaseController):
         if action is None:
             return
         if player is None:
+            if not down:
+                return
             return self.model.register(action)
         if action != "dir":
             return self.model.register(action, player, down)
@@ -82,18 +85,18 @@ class DojoController(BaseController):
 
     def register_hat(self, hat, player):
         action, convert = self.hat_action
-        self.register(action, player, convert * hat)
+        return self.register(action, player, convert * hat)
 
     def register_button(self, button, player, down):
         action = self.button_dct.get(button)
         if action:
-            self.model.register(action, player, down)
+            return self.model.register(action, player, down)
 
     def register_axis(self, joy, player):
         action, convert = self.axis_action
         raw_values = [self.joysticks[joy].get_axis(i) for i in (0,1)]
         direction = convert * map(self.axis_position, raw_values)
-        self.model.register(action, player, direction)
+        return self.model.register(action, player, direction)
     
             
             

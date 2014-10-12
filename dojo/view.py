@@ -16,8 +16,11 @@ class DojoSprite(AutoSprite):
 class PlayerSprite(AutoSprite):
     """Dojo sprite"""
 
-    filename = {1: "player_1",
-                2: "player_2",}
+    player_dct = {1: "player_1",
+                  2: "player_2",}
+
+    ko_dct = {1: "ko_1",
+              2: "ko_2",}
 
     fixed_convert_dct = {Dir.NONE:  (False, False, 0),
                          Dir.UP:    (False, True,  0),
@@ -52,16 +55,18 @@ class PlayerSprite(AutoSprite):
         return self.resource_dct[self.jump_convert_dct[key]]
 
     def init(self):
+        # Animation
         timer = self.model.timer
-        filename = self.filename[self.model.id]
+        filename = self.player_dct[self.model.id]
         resource = self.resource.image.get(filename)
         self.resource_dct = self.generate_animation_dct(resource, timer)
+        # KO
+        filename = self.ko_dct[self.model.id]
+        self.ko = self.resource.image.get(filename)
 
     def get_image(self):
-        screen = self.parent.screen
-        draw.rect(screen, Color("red"), self.model.head, 1)
-        draw.rect(screen, Color("green"), self.model.body, 1)
-        draw.rect(screen, Color("blue"), self.model.legs, 1)
+        if self.model.ko:
+            return self.ko
         return self.get_animation().get()
 
     def get_rect(self):

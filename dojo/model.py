@@ -24,6 +24,10 @@ class DojoModel(BaseModel):
     def register_jump(self, player, down):
         player = self.players[player]
         player.load() if down else player.jump()
+
+    def register_reset(self):
+        self.control.register_next_state(type(self.state))
+        return True
             
 
     def register_dir(self, player, direction):
@@ -39,8 +43,10 @@ class DojoModel(BaseModel):
             tie = not index
         colide = tie or any(hit.values())
         if colide and not self.coliding:
-            if hit[1]: print "1 hit 2 !!"
-            if hit[2]: print "2 hit 1 !!"
+            if hit[1]:
+                self.players[2].set_ko()
+            if hit[2]:
+                self.players[1].set_ko()
             for player in self.players.values():
                 player.speed *= (-self.damping,)*2
                 self.coliding = True
@@ -83,7 +89,7 @@ class PlayerModel(BaseModel):
     load_factor_min = 5
     load_factor_max = 10
 
-    # Debu
+    # Debug
     display_hitbox = False
 
     collide_dct = {Dir.DOWN: "bottom",
@@ -118,6 +124,7 @@ class PlayerModel(BaseModel):
         self.pos = Dir.DOWN
         self.fixed = True
         self.loading = False
+        self.ko = False
         self.loading_speed = self.init_speed
         self.timer = Timer(self, stop=self.period, periodic=True)
         self.timer.start()
@@ -130,12 +137,15 @@ class PlayerModel(BaseModel):
     def delta_tuple(self):
         return xytuple(self.delta, self.delta)
 
+    def set_ko(self):
+        self.ko = True
+        self.fixed = False
 
     def load(self):
         self.loading = True
 
     def jump(self):
-        if self.fixed:
+        if self.fixed and not self.ko:
             dir_coef = self.current_dir
             if any(dir_coef):
                 dir_coef /= (abs(dir_coef),)*2
@@ -162,6 +172,8 @@ class PlayerModel(BaseModel):
                 dct[distance] = rect, direc, attr
             self.rect, self.pos, _ = dct[min(dct)]
             del collide_dct[self.pos]
+        if self.ko and self.pos != Dir.DOWN:
+            self.fixed = False
 
     @property
     def loading_ratio(self):
@@ -197,16 +209,22 @@ class PlayerModel(BaseModel):
 
     @property
     def head(self):
+        if self.ko:
+            return Rect(0,0,0,0)
         if self.fixed:       
             return self.get_rect_from_dir(self.pos * (-1,-1))
         return self.get_rect_from_dir(self.current_dir * (-1,-1))
 
     @property
     def body(self):
+        if self.ko:
+            return Rect(0,0,0,0)
         return self.get_rect_from_dir(Dir.NONE)
 
     @property
     def legs(self):
+        if self.ko:
+            return Rect(0,0,0,0)
         if self.fixed:       
             return self.get_rect_from_dir(self.pos)
         return self.get_rect_from_dir(self.current_dir)
