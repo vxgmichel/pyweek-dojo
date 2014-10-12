@@ -1,9 +1,13 @@
 pyweek-dojo
 ===========
 
-A minimalistic versus fighting game (and a Pyweek 19 entry) 
+A minimalistic versus fighting game (and a Pyweek 19 entry).
 
 ![Screenshot](/resource/image/screenshot.png?raw=true "ScreenShot")
+
+In one dojo, with one life, so one hit causes one win.
+The gameplay is based on the fact that you can grab the walls 
+and ceiling of the room to jump on your opponent. 
 
 ## Requirement
 
