@@ -1,14 +1,20 @@
+"""Contain the controller for the main game state."""
+
+# Imports
 from mvctools import BaseController, xytuple
 from collections import defaultdict
 from dojo.common import Dir
 import pygame as pg
 
-# Controller
 
+# Dojo controller
 class DojoController(BaseController):
+    """COntroller for the main game state."""
 
+    # Threshold for joysticks
     axis_threshold = 0.5
 
+    # Key to action mapping
     key_dct = {pg.K_TAB:    ("jump", 1),
                pg.K_RSHIFT: ("jump", 2),
                pg.K_w:      ("dir",  1),
@@ -20,7 +26,8 @@ class DojoController(BaseController):
                pg.K_LEFT:   ("dir",  2),
                pg.K_RIGHT:  ("dir",  2),
                pg.K_r:      ("reset", None)}
-
+    
+    # Key to direction mapping
     dir_dict = {pg.K_w:     (Dir.UP,    1),
                 pg.K_a:     (Dir.LEFT,  1),
                 pg.K_s:     (Dir.DOWN,  1),
@@ -30,13 +37,16 @@ class DojoController(BaseController):
                 pg.K_DOWN:  (Dir.DOWN,  2),
                 pg.K_RIGHT: (Dir.RIGHT, 2),}
 
+    # Button to action mapping
     button_dct = {0: "jump",
                   2: "jump",}
 
+    # Axis and hat handling
     hat_action =  ("dir", xytuple(1, -1))
     axis_action = ("dir", xytuple(1, +1))
 
     def init(self):
+        """Initialize the joysticks."""
         factory = lambda: None
         self.cache_dct = defaultdict(factory)
         pg.joystick.quit()
@@ -47,8 +57,7 @@ class DojoController(BaseController):
             self.joysticks[-1].init()
 
     def handle_event(self, event):
-        if super(DojoController, self).handle_event(event):
-            return True
+        """Process the different type of events."""
         if event.type == pg.KEYDOWN:
             return self.register_key(event.key, True)
         if event.type == pg.KEYUP:
@@ -63,9 +72,11 @@ class DojoController(BaseController):
             return self.register_axis(event.joy, event.joy+1)
 
     def axis_position(self, arg):
+        """Convert axis value to position."""
         return cmp(arg, 0) if abs(arg) >= self.axis_threshold else 0
 
     def register_key(self, key, down):
+        """Register a key strike."""
         action, player = self.key_dct.get(key, (None, None))
         if action is None:
             return
@@ -78,21 +89,25 @@ class DojoController(BaseController):
         return self.register(action, player, self.get_key_direction(player))
 
     def get_key_direction(self, player):
+        """Get direction from current key state."""
         dct = pg.key.get_pressed()
         gen = (direc for key, (direc, play) in self.dir_dict.items()
                if play == player and dct[key])
         return sum(gen, xytuple(0,0))
 
     def register_hat(self, hat, player):
+        """Register a hat event."""
         action, convert = self.hat_action
         return self.register(action, player, convert * hat)
 
     def register_button(self, button, player, down):
+        """Register a button event."""
         action = self.button_dct.get(button)
         if action:
             return self.model.register(action, player, down)
 
     def register_axis(self, joy, player):
+        """Register an axis event."""
         action, convert = self.axis_action
         raw_values = [self.joysticks[joy].get_axis(i) for i in (0,1)]
         direction = convert * map(self.axis_position, raw_values)
