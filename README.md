@@ -34,5 +34,10 @@ A minimalistic versus fighting game (and a Pyweek 19 entry)
  - Move : Arrows 
  - Jump : RightShift
  
+ **Controller:**
+ - Move : Hat or Axis 
+ - Jump : A (Button 0)
+ - Reset: Y (Button 3)
+ 
 **General:**
   - Reset : R

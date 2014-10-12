@@ -38,8 +38,8 @@ class DojoController(BaseController):
                 pg.K_RIGHT: (Dir.RIGHT, 2),}
 
     # Button to action mapping
-    button_dct = {0: "jump",
-                  2: "jump",}
+    button_dct = {0: ("jump", False),
+                  3: ("reset",True),}
 
     # Axis and hat handling
     hat_action =  ("dir", xytuple(1, -1))
@@ -81,8 +81,7 @@ class DojoController(BaseController):
         if action is None:
             return
         if player is None:
-            if not down:
-                return
+            if not down: return
             return self.model.register(action)
         if action != "dir":
             return self.model.register(action, player, down)
@@ -102,8 +101,11 @@ class DojoController(BaseController):
 
     def register_button(self, button, player, down):
         """Register a button event."""
-        action = self.button_dct.get(button)
-        if action:
+        action, general = self.button_dct.get(button)
+        if action and general:
+            if not down: return
+            return self.model.register(action)
+        elif action:
             return self.model.register(action, player, down)
 
     def register_axis(self, joy, player):
