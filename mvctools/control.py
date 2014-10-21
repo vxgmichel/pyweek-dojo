@@ -9,7 +9,7 @@ from mvctools.resource import ResourceHandler
 
 
 # Base class
-class BaseControl:
+class BaseControl(object):
     """Base class for the state control.
 
     Its main puprpose is to run the states and handle the transitions between
@@ -60,6 +60,7 @@ class BaseControl:
             first_state = SomeState
             
             def pre_run(self) :
+                super(Example, self).pre_run()
                 pygame.mouse.set_visible(False)
             
         # Run the main control
@@ -116,7 +117,6 @@ class BaseControl:
     def run(self):
         """Run the game."""
         # Prepare the run
-        self.settings.set_mode()
         self.pre_run()
         # Loop over the states
         while self.load_next_state():
@@ -128,12 +128,13 @@ class BaseControl:
         self.safe_exit()
 
     def pre_run(self):
-        """ Empty method to override.
+        """Method to override.
 
-        This code is executed after the video mode is set and before the first
-        state is instantiated.
+        This initializes the video mode.
         """
-        pass
+        flag = pygame.FULLSCREEN if self.settings.fullscreen else 0
+        pygame.display.set_mode(self.settings.size, flag)
+        pygame.display.set_caption(self.window_title)
 
     def register_next_state(self, state):
         """Register the class of the next state to instantiate and run.

@@ -94,6 +94,3 @@ class BaseSettings(object):
             self.set_mode()
             self.control.reload()
 
-    def set_mode(self):
-        flag = pygame.FULLSCREEN if self.fullscreen else 0
-        pygame.display.set_mode(self.size, flag)
