@@ -31,7 +31,7 @@ class DojoModel(BaseModel):
     def score_dct(self):
         return {i:0 for i in (1,2)}
     
-    def register_jump(self, player, down):
+    def register_activate(self, player, down):
         """Register a jump from the controller."""
         player = self.players[player]
         player.load() if down else player.jump()
@@ -39,6 +39,10 @@ class DojoModel(BaseModel):
     def register_reset(self):
         """Register a reset from the controller."""
         self.control.register_next_state(type(self.state))
+        return True
+
+    def register_escape(self):
+        """Register an escape from the controller."""
         return True
             
     def register_dir(self, player, direction):

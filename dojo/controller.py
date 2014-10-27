@@ -15,20 +15,26 @@ class DojoController(BaseController):
     axis_threshold = 0.5
 
     # Key to action mapping
-    key_dct = {pg.K_TAB:    ("activate", 1),
-               pg.K_RSHIFT: ("activate", 2),
-               pg.K_r:      ("reset", None),
-               pg.K_ESCAPE: ("escape", None),}
+    key_dct = {pg.K_TAB:      ("activate", 1),
+               pg.K_SPACE:    ("activate", 1),
+               pg.K_LSHIFT:   ("activate", 1),
+               pg.K_LCTRL:    ("activate", 1),
+               pg.K_KP_ENTER: ("activate", 2),
+               pg.K_RETURN:   ("activate", 2),
+               pg.K_RSHIFT:   ("activate", 2),
+               pg.K_RCTRL:    ("activate", 2),
+               pg.K_r:        ("reset", None),
+               pg.K_ESCAPE:   ("escape", None),}
     
     # Key to direction mapping
-    dir_dict = {pg.K_w:     (Dir.UP,    1),
-                pg.K_a:     (Dir.LEFT,  1),
-                pg.K_s:     (Dir.DOWN,  1),
-                pg.K_d:     (Dir.RIGHT, 1),
-                pg.K_UP:    (Dir.UP,    2),
-                pg.K_LEFT:  (Dir.LEFT,  2),
-                pg.K_DOWN:  (Dir.DOWN,  2),
-                pg.K_RIGHT: (Dir.RIGHT, 2),}
+    dir_dct = {pg.K_w:     (Dir.UP,    1),
+               pg.K_a:     (Dir.LEFT,  1),
+               pg.K_s:     (Dir.DOWN,  1),
+               pg.K_d:     (Dir.RIGHT, 1),
+               pg.K_UP:    (Dir.UP,    2),
+               pg.K_LEFT:  (Dir.LEFT,  2),
+               pg.K_DOWN:  (Dir.DOWN,  2),
+               pg.K_RIGHT: (Dir.RIGHT, 2),}
 
     # Update key to action
     key_dct.update((key, ('dir', value[1]))
@@ -87,20 +93,26 @@ class DojoController(BaseController):
     def get_key_direction(self, player):
         """Get direction from current key state."""
         dct = pg.key.get_pressed()
-        gen = (direc for key, (direc, play) in self.dir_dict.items()
+        gen = (direc for key, (direc, play) in self.dir_dct.items()
                if play == player and dct[key])
         return sum(gen, xytuple(0,0))
 
     def get_axis_direction(self, player):
         """Get direction from current key state."""
         _, convert = self.axis_action
-        raw_values = [self.joysticks[player-1].get_axis(i) for i in (0,1)]
+        try :
+            raw_values = [self.joysticks[player-1].get_axis(i) for i in (0,1)]
+        except IndexError:
+            raw_values = 0,0
         return convert * map(self.axis_position, raw_values)
 
     def get_hat_direction(self, player):
         """Get direction from current key state."""
         _, convert = self.hat_action
-        return convert * self.joysticks[player-1].get_hat(0)
+        try:
+            return convert * self.joysticks[player-1].get_hat(0)
+        except IndexError:
+            return convert * (0, 0)
 
     def register_key(self, key, down):
         """Register a key strike."""
