@@ -6,8 +6,9 @@ from collections import defaultdict
 from pygame import Rect, Surface, transform, draw, Color
 from mvctools import BaseView, AutoSprite, xytuple
 from mvctools.utils import TextSprite
+from mvctools.utils.renderer import opacify
 from dojo.model import DojoModel, PlayerModel, RectModel
-from dojo.common import Dir
+from dojo.common import Dir, DIR_TO_ATTR
 
 
 class WhiteTextSprite(TextSprite):
@@ -15,6 +16,7 @@ class WhiteTextSprite(TextSprite):
     # Font settings
     font_name = "visitor2"
     font_size = 20
+    antialias = False
     color = "white"
     opacity = 0.3
     margin = -3
@@ -24,8 +26,8 @@ class WhiteTextSprite(TextSprite):
 class DojoSprite(AutoSprite):
     """Dojo background sprite."""
 
-    string_dct = {1: ("P1\n-RDFG-\nJUMP:X", "left"),
-                  2: ("P2\nARROWS\nJUMP:P", "right"),}
+    string_dct = {1: ("P1\n-RDFG-\nJUMP-X", "left"),
+                  2: ("P2\nARROWS\nJUMP-P", "right"),}
     reset_string = "RESET:U"
 
     def init(self):
@@ -101,6 +103,56 @@ class ControlSprite(WhiteTextSprite):
         return size * self.pos_dct[self.player]
 
 
+def opacify_ip(surface, opacity):
+    if opacity < 1: 
+        color = 255, 255, 255, int(255 * opacity)
+        surface.fill(color, special_flags=pg.BLEND_RGBA_MULT)
+
+
+# Aura sprite
+class AuraSprite(AutoSprite):
+    """Aura sprite."""
+
+    opacity = 0.5
+
+    perp_name = "arrow_perp"
+    diag_name = "arrow_diag"
+
+    perp_dir = [Dir.UP, Dir.LEFT, Dir.DOWN, Dir.RIGHT]
+    diag_dir = [Dir.UPRIGHT, Dir.UPLEFT, Dir.DOWNLEFT, Dir.DOWNRIGHT]
+
+    def init(self):
+        """Initialize the resources."""
+        self.resource_dct = self.generate_resource_dct()
+        self.layer = self.parent.layer + 1
+
+    def get_image(self):
+        if self.model.fixed and not self.model.ko:
+            return self.resource_dct[self.model.current_dir]
+
+    def get_rect(self):
+        attr = DIR_TO_ATTR[self.model.current_dir]
+        center = getattr(self.model.rect, attr)
+        return self.image.get_rect(center=center)
+            
+    def generate_resource_dct(self):
+        """Genrerate animations with rotations and flipping."""
+        dct = {Dir.NONE: None}
+        # Raw
+        diag_image = self.resource.image.get(self.diag_name)
+        perp_image = self.resource.image.get(self.perp_name)
+        # Rotate
+        for r in range(4):
+            dct[self.perp_dir[r]] = transform.rotate(perp_image, 90*r)
+            dct[self.diag_dir[r]] = transform.rotate(diag_image, 90*r)
+        # Opacify
+        for image in dct.values():
+            if image:
+                opacify_ip(image, self.opacity)
+        # Return
+        return dct
+
+
 # Player sprite
 class PlayerSprite(AutoSprite):
     """Player sprite. Handle player animation."""
@@ -130,6 +182,7 @@ class PlayerSprite(AutoSprite):
     def init(self):
         """Initialize the resources."""
         # Animation
+        self.layer = 10 
         timer = self.model.timer
         filename = self.player_dct[self.model.id]
         resource = self.resource.image.get(filename)
@@ -137,6 +190,8 @@ class PlayerSprite(AutoSprite):
         # KO
         filename = self.ko_dct[self.model.id]
         self.ko = self.resource.image.get(filename)
+        # Aura
+        self.aura = AuraSprite(self)
 
     def get_image(self):
         """Return the current image to use."""

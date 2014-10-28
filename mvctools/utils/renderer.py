@@ -5,7 +5,7 @@ from pygame import Color, Rect
 
 
 def opacify(source, opacity):
-    surface = source.copy()
+    surface = source.convert_alpha()
     if opacity < 1: 
         color = 255, 255, 255, int(255 * opacity)
         surface.fill(color, special_flags=pg.BLEND_RGBA_MULT)
