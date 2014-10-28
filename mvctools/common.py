@@ -1,6 +1,7 @@
 """Module with useful classes and functions."""
 
 import operator
+from functools import wraps
 from collections import namedtuple, defaultdict
 from pygame import Color
 
@@ -105,14 +106,13 @@ class cachedict(defaultdict):
         return self[key]
 
 
-def cache(func):
+def cache(func, static=False):
     dct = {}
-    def wrapper(arg):
-        if arg not in dct:
-            dct[arg] = func(arg)
-        return dct[arg]
-    wrapper.__doc__ = func.__doc__
-    wrapper.__name__ = func.__name__
+    @wraps(func)
+    def wrapper(*args):
+        if args not in dct:
+            dct[args] = func(*args[static:])
+        return dct[args]
     return wrapper
 
 class Color(Color):

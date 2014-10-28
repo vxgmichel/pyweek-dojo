@@ -4,6 +4,7 @@ from mvctools.common import xytuple, Color
 class BaseSettings(object):
     def __init__(self, control):
         self.control = control
+        self.font_dir = "font"
         self._fps = 60
         self._width = 1280
         self._height = 720

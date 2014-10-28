@@ -15,22 +15,20 @@ class DojoController(BaseController):
     axis_threshold = 0.5
 
     # Key to action mapping
-    key_dct = {pg.K_TAB:      ("activate", 1),
+    key_dct = {pg.K_x:        ("activate", 1),
                pg.K_SPACE:    ("activate", 1),
-               pg.K_LSHIFT:   ("activate", 1),
                pg.K_LCTRL:    ("activate", 1),
+               pg.K_p:        ("activate", 2),
                pg.K_KP_ENTER: ("activate", 2),
-               pg.K_RETURN:   ("activate", 2),
-               pg.K_RSHIFT:   ("activate", 2),
                pg.K_RCTRL:    ("activate", 2),
-               pg.K_r:        ("reset", None),
+               pg.K_u:        ("reset", None),
                pg.K_ESCAPE:   ("escape", None),}
     
     # Key to direction mapping
-    dir_dct = {pg.K_w:     (Dir.UP,    1),
-               pg.K_a:     (Dir.LEFT,  1),
-               pg.K_s:     (Dir.DOWN,  1),
-               pg.K_d:     (Dir.RIGHT, 1),
+    dir_dct = {pg.K_r:     (Dir.UP,    1),
+               pg.K_d:     (Dir.LEFT,  1),
+               pg.K_f:     (Dir.DOWN,  1),
+               pg.K_g:     (Dir.RIGHT, 1),
                pg.K_UP:    (Dir.UP,    2),
                pg.K_LEFT:  (Dir.LEFT,  2),
                pg.K_DOWN:  (Dir.DOWN,  2),

@@ -3,7 +3,6 @@
 # Imports
 import os, pygame, dojo
 from mvctools import BaseControl, BaseState
-from mvctools.utils import BaseMenuController
 from dojo.model import DojoModel
 from dojo.view import DojoView
 from dojo.controller import DojoController
