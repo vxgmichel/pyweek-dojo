@@ -17,8 +17,8 @@ and ceiling of the room to jump on your opponent.
 ## Run locally
 
     $ python Dojo.py 
-	# Or
-	$ python -m dojo
+    # Or
+    $ python -m dojo
 
 ## Installation
 
@@ -32,28 +32,25 @@ and ceiling of the room to jump on your opponent.
 
  - Since it's a versus fighting game, you need to be two players.
  - The characters can't walk, run or hit. Only jump.
- - If they touch a wall or the ceiling, they'll automatically grab it.
- - In a given position, 4 directions are available:
-    - Jump at 0 degree
-    - Jump at - 45 degrees
-    - Jump at + 45 degrees
-    - Or let yourself down
+ - The control direction when the jump key is released fixes the jump direction
  - It is possible to jump higher by keeping the jump button pressed.
+ - It is possible for a player to let himself down by pressing jump without direction.
+ - The game switches to slow motion when players are close to hit each other. 
  - A player is considered KO when he's hit by the legs of the attacking player.
  - When players jump onto each other, they bounce.
- - To start a new match, reset by pressing "R".
+ - To start a new match, reset by pressing "U".
  - Counters on the wall keep track of the score.
  - Controllers are supported (reset to detect new controllers).
 	
 ## Controls
 
 **Player 1:**
- - Move : WASD 
- - Jump : Tab
+ - Move : RDFG 
+ - Jump : X or SPACE
  
 **Player 2:**
  - Move : Arrows 
- - Jump : RightShift
+ - Jump : P or ENTER (Keypad)
  
 **Controller:**
  - Move : Hat or Axis 
@@ -61,9 +58,26 @@ and ceiling of the room to jump on your opponent.
  - Reset: Y (Button 3)
  
 **General:**
-  - Reset : R
+  - Reset : U
   - Quit : Escape
-  
+
+## Settings
+
+It is possible to change the size, fps and fullscreen settings by editing the values 
+in the main() function (`dojo/__init__.py`):
+
+ - **dojo.settings.fullscreen**: Set it to True for fullscreen mode, default is False.
+ - **dojo.settings.size**: The window size is completely decoupled from the game size. 
+   Any value should work.
+ - **dojo.settings.fps**: The actual speed of the game is not affected by this value. 
+   However, raising it up will result in a better precision for collision, 
+   but will keep you processor busier. 120 is a good compromise.
+
+## MVC Tools
+
+The game is based on [pygame-mvctools](https://github.com/vxgmichel/pygame-mvctools),
+a library for writing games using the model-controller-view design pattern.
+
 ## Repository
 
 These sources are available on [gitbub]
