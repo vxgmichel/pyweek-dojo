@@ -17,10 +17,8 @@ class DojoController(BaseController):
     # Key to action mapping
     key_dct = {pg.K_x:        ("activate", 1),
                pg.K_SPACE:    ("activate", 1),
-               pg.K_LCTRL:    ("activate", 1),
                pg.K_p:        ("activate", 2),
                pg.K_KP_ENTER: ("activate", 2),
-               pg.K_RCTRL:    ("activate", 2),
                pg.K_u:        ("reset", None),
                pg.K_ESCAPE:   ("escape", None),}
     

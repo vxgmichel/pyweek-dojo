@@ -46,11 +46,39 @@ class DojoModel(BaseModel):
         return True
             
     def register_dir(self, player, direction):
-        """Register a direction change from the contromller."""
+        """Register a direction change from the controller."""
         self.players[player].control_dir = direction
+
+    def update_speed(self):
+        # Settings
+        mini = 0.01
+        threshold = 16
+        factor = 4
+        # end
+        lst = []
+        for i in (1,2):
+            j = 2 if i==1 else 1
+            pos_1 = xytuple(*self.players[i].legs.center)
+            if not any(pos_1):
+                continue
+            pos_2 = xytuple(*self.players[j].head.center)
+            pos_3 = xytuple(*self.players[j].body.center)
+            lst.append(abs(pos_1-pos_2))
+            lst.append(abs(pos_1-pos_3))
+        if not lst:
+            self.control.settings.speed = 1.0
+            return
+        ratio = min(lst) / float(threshold)
+        if ratio > 1 :
+            self.control.settings.speed = 1.0
+            return
+        if ratio < mini:
+            ratio = mini
+        self.control.settings.speed = ratio/float(factor)
 
     def update(self):
         """Detect collision between the 2 players."""
+        self.update_speed()
         hit = {}
         for i in (1,2):
             j = 2 if i==1 else 1
@@ -115,7 +143,6 @@ class PlayerModel(BaseModel):
     load_factor_max = 10 # period-1
 
     # Hitbox
-    display_hitbox = False
     hitbox_ratio = 0.25
 
     # Direction to Rect attributes for wall collision
@@ -163,7 +190,7 @@ class PlayerModel(BaseModel):
         self.timer = Timer(self, stop=self.period, periodic=True)
         self.timer.start()
         # Debug
-        if self.display_hitbox:
+        if self.control.settings.display_hitbox:
             RectModel(self, "head", Color("red"))
             RectModel(self, "body", Color("green"))
             RectModel(self, "legs", Color("blue"))
@@ -238,12 +265,15 @@ class PlayerModel(BaseModel):
             sign = lambda arg: cmp(arg, 0)
             return current_dir.map(sign)
         # Dynamic case
-        if not any(self.speed):
-            return xytuple(0,0)
-        norm = self.speed / ((abs(self.speed),)*2)
-        _, x, y = min((abs(norm - (x,y)), x, y)
-                          for x in range(-1,2)
-                              for y in range(-1,2))
+        lst = []
+        for x in range(-1,2):
+            for y in range(-1,2):
+                if x or y:
+                    norm = xytuple(x,y).map(float)
+                    norm /= (abs(norm),)*2
+                    value = abs(self.speed-norm)
+                    lst.append((value, x, y))
+        _, x, y = min(lst)
         return xytuple(x,y)
 
     def get_rect_from_dir(self, direction):

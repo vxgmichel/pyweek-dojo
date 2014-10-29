@@ -135,6 +135,7 @@ class TextSprite(AutoSprite):
     def init(self, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
+        self.update_lines()
 
     def get_child_text(self, lid):
         try: return self.text.splitlines()[lid]
@@ -156,6 +157,7 @@ class TextSprite(AutoSprite):
 
     def get_child_pos(self, lid):
         # Get children size
+        self.update_lines()
         max_size = max(child.size for child in self.children)
         # Get alignment
         attr = self.alignment
@@ -166,19 +168,15 @@ class TextSprite(AutoSprite):
         y = self.rect.top + max_size.y * (lid + 0.5)
         y += self.margin * lid
         return x,y
-        
-    def update(self):
-        self.update_lines()
-        AutoSprite.update(self)
 
     @property
     def size(self):
+        self.update_lines()
         max_size = max(child.size for child in self.children)
         size = max_size * (1, len(self.children))
         return size + (1, len(self.children) * self.margin)
     
     def get_rect(self):
-        max_size = max(child.size for child in self.children)
         rect = Rect((0,0), self.size)
         setattr(rect, self.reference, self.pos)
         return rect

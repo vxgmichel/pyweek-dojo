@@ -64,9 +64,13 @@ class BaseState(object):
         clock.tick()
         # Loop over the state ticks
         while not self.tick():
-            millisec = clock.tick(self.control.settings.fps)
+            tick = self.control.settings.fps
+            tick *= self.control.settings.debug_speed
+            millisec = clock.tick(tick)
             if millisec:
                 self.current_fps = 1000.0/millisec
+                self.current_fps /= float(self.control.settings.debug_speed)
+                self.current_fps /= float(self.control.settings.speed)
             rate = clock.get_fps()
             if rate and string:
                     caption = string.format(int(rate))

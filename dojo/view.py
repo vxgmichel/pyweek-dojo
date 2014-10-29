@@ -218,9 +218,15 @@ class PlayerSprite(AutoSprite):
         diag_image = self.resource.image.get(self.diag_names[pid])
         perp_image = self.resource.image.get(self.perp_names[pid])
         # Rotate
-        for r in range(4):
-            dct[self.perp_dir[r]] = transform.rotate(perp_image, 90*r)
-            dct[self.diag_dir[r]] = transform.rotate(diag_image, 90*r)
+        for r in (0,3):
+            dct[self.perp_dir[r]] = transform.rotate(perp_image, r*90)
+            dct[self.diag_dir[r]] = transform.rotate(diag_image, r*90)
+        if pid == 2:
+            dct[self.perp_dir[3]] = transform.flip(dct[self.perp_dir[3]], 0, 1)
+        dct[self.diag_dir[1]] = transform.flip(dct[self.diag_dir[0]], 1, 0)
+        dct[self.diag_dir[2]] = transform.flip(dct[self.diag_dir[3]], 1, 0)
+        dct[self.perp_dir[1]] = transform.flip(dct[self.perp_dir[3]], 1, 0)
+        dct[self.perp_dir[2]] = transform.rotate(perp_image, 180) 
         # Return
         return dct
 
