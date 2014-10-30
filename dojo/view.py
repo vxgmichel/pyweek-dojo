@@ -152,6 +152,14 @@ class AuraSprite(AutoSprite):
         # Return
         return dct
 
+# Flash function
+def flash(image, black):
+    result = image.copy()
+    delta = 64 if black else 32
+    color = (delta, delta, delta*2, 0)
+    flag = pg.BLEND_RGBA_SUB if black else pg.BLEND_RGBA_ADD
+    result.fill(color, special_flags=flag)
+    return result
 
 # Player sprite
 class PlayerSprite(AutoSprite):
@@ -203,6 +211,7 @@ class PlayerSprite(AutoSprite):
             return self.ko
         if self.model.fixed:
             arg = self.fixed_convert_dct[self.model.pos]
+            arg += (self.model.loading,)
             animation = self.resource_dct[arg]
             return animation.get()
         return self.jumping_dct.get(self.model.current_dir, self.image) 
@@ -237,8 +246,11 @@ class PlayerSprite(AutoSprite):
             for v in range(2):
                 for r in range(4):
                     lst = [transform.rotate(transform.flip(img, h, v), 90*r)
-                           for img in resource]
-                    dct[h,v,r] = self.build_animation(lst, timer=timer) 
+                               for img in resource]
+                    for l in range(2):
+                        if l:
+                            lst = [flash(image, i/2) for i, image in enumerate(lst)]
+                        dct[h,v,r,l] = self.build_animation(lst, timer=timer) 
         return dct
 
 

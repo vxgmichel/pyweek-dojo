@@ -167,7 +167,7 @@ class Animation(object):
         self.resource = resource
         self.size = size
         self.timer = timer
-        start, stop = timer.get_interval()
+        start, stop = timer.interval
         self.inf = start if inf is None else inf
         self.sup = stop if sup is None else sup
         self.looping = looping

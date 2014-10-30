@@ -222,23 +222,27 @@ class Timer(BaseModel):
         self._ratio = 0.0
         self._current_value = float(start)
         self._next_increment = 0.0
-
-    def get_interval(self):
+        
+    @property
+    def interval(self):
         """Return the (start, stop) interval as a tuple."""
         return self._start, self._stop
 
+    @property
     def is_set(self):
         """Return True if the timer reached its stop value.
         Return False otherwise.
         """
         return self._current_value == self._stop
 
+    @property
     def is_reset(self):
         """Return True if the timer reached its start value.
         Return False otherwise.
         """
         return self._current_value == self._start
 
+    @property
     def is_paused(self):
         """Return True if the timer is paused, False otherwise."""
         return self._ratio == 0

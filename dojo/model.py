@@ -51,11 +51,10 @@ class DojoModel(BaseModel):
 
     def update_speed(self):
         # Settings
-        mini = 0.01
         threshold = 16
-        factor = 4
-        # end
-        lst = []
+        slow = 0.1
+        # Get distance
+        lst = [float("inf")]
         for i in (1,2):
             j = 2 if i==1 else 1
             pos_1 = xytuple(*self.players[i].legs.center)
@@ -65,16 +64,11 @@ class DojoModel(BaseModel):
             pos_3 = xytuple(*self.players[j].body.center)
             lst.append(abs(pos_1-pos_2))
             lst.append(abs(pos_1-pos_3))
-        if not lst:
+        # Set speed
+        if min(lst) > float(threshold):
             self.control.settings.speed = 1.0
-            return
-        ratio = min(lst) / float(threshold)
-        if ratio > 1 :
-            self.control.settings.speed = 1.0
-            return
-        if ratio < mini:
-            ratio = mini
-        self.control.settings.speed = ratio/float(factor)
+        else:
+            self.control.settings.speed = slow
 
     def update(self):
         """Detect collision between the 2 players."""
@@ -134,11 +128,12 @@ class PlayerModel(BaseModel):
     air_friction = 0.5, 0.5  # s-1
     gravity = 0, 981         # pixel/s-2
     load_speed = 600         # pixel/s-2
-    init_speed = 200         # pixel/s
+    init_speed = 250         # pixel/s
     max_loading_speed = 1000 # pixel/s
 
     # Animation
     period = 2.0         # s
+    pre_jump = 0.25      # s
     load_factor_min = 5  # period-1
     load_factor_max = 10 # period-1
 
@@ -183,12 +178,19 @@ class PlayerModel(BaseModel):
         self.control_dir = Dir.NONE
         self.pos = Dir.DOWN
         self.fixed = True
-        self.loading = False
         self.ko = False
-        self.loading_speed = self.init_speed
         # Animation timer
-        self.timer = Timer(self, stop=self.period, periodic=True)
-        self.timer.start()
+        self.timer = Timer(self,
+                           stop=self.period,
+                           periodic=True).start()
+        # Loading timer
+        self.loading_timer = Timer(self,
+                                   start=self.init_speed,
+                                   stop=self.max_loading_speed)
+        # Delay timer
+        self.delay_timer = Timer(self,
+                                 stop=self.pre_jump,
+                                 callback=self.delay_callback)
         # Debug
         if self.control.settings.display_hitbox:
             RectModel(self, "head", Color("red"))
@@ -200,14 +202,27 @@ class PlayerModel(BaseModel):
         """Delta time as an xytuple."""
         return xytuple(self.delta, self.delta)
 
+    @property
+    def loading(self):
+        return self.loading_timer.is_set or not self.loading_timer.is_paused
+
+    @property
+    def loading_speed(self):
+        return self.loading_timer.get()
+    
     def set_ko(self):
         """Knock the player out."""
         self.ko = True
         self.fixed = False
 
     def load(self):
+        self.delay_timer.reset().start()
+        self.timer.set(self.period*0.9)
+
+    def delay_callback(self, timer):
         """Start loading the jump."""
-        self.loading = True
+        self.loading_timer.reset().start(self.load_speed)
+        self.timer.reset().start()
 
     def jump(self):
         """Make the player jump."""
@@ -223,8 +238,10 @@ class PlayerModel(BaseModel):
                 self.pos = Dir.NONE
                 self.fixed = False
         # Reset loading
-        self.loading = False
-        self.loading_speed = self.init_speed
+        self.delay_timer.reset()
+        self.loading_timer.reset()
+        # Reset animation
+        self.timer.reset().start()
 
     def update_collision(self):
         """Handle wall collisions."""
@@ -317,10 +334,6 @@ class PlayerModel(BaseModel):
         self.speed += self.delta_tuple * acc
         if self.fixed:
             self.speed *= 0,0
-        # Update loading speed
-        if self.fixed and self.loading:
-            self.loading_speed += self.delta * self.load_speed
-        self.loading_speed = min(self.loading_speed, self.max_loading_speed)
         # Get step
         step = self.delta_tuple * self.speed
         step += self.remainder
@@ -330,6 +343,7 @@ class PlayerModel(BaseModel):
         self.rect.move_ip(intstep)
         self.update_collision()
         # Update timer
-        delta = self.load_factor_max - self.load_factor_min
-        ratio = self.load_factor_min + self.loading_ratio * delta
-        self.timer.start(ratio if self.loading_ratio else 1)
+        if self.loading:
+            delta = self.load_factor_max - self.load_factor_min
+            ratio = self.load_factor_min + self.loading_ratio * delta
+            self.timer.start(ratio)
