@@ -113,7 +113,7 @@ def opacify_ip(surface, opacity):
 class AuraSprite(AutoSprite):
     """Aura sprite."""
 
-    opacity = 0.5
+    opacity = 1
 
     perp_name = "aura/aura_perp"
     diag_name = "aura/aura_diag"
