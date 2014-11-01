@@ -47,7 +47,7 @@ class DojoModel(BaseModel):
             
     def register_dir(self, player, direction):
         """Register a direction change from the controller."""
-        self.players[player].control_dir = direction
+        self.players[player].register_dir(direction)
 
     def update_speed(self):
         # Settings
@@ -176,6 +176,7 @@ class PlayerModel(BaseModel):
         # Player state
         self.speed = self.remainder = xytuple(0.0,0.0)
         self.control_dir = Dir.NONE
+        self.save_dir = Dir.NONE
         self.pos = Dir.DOWN
         self.fixed = True
         self.ko = False
@@ -196,6 +197,11 @@ class PlayerModel(BaseModel):
             RectModel(self, "head", Color("red"))
             RectModel(self, "body", Color("green"))
             RectModel(self, "legs", Color("blue"))
+
+    def register_dir(self, direction):
+        if any(direction):
+            self.save_dir = direction
+        self.control_dir = direction
 
     @property
     def delta_tuple(self):
@@ -235,6 +241,7 @@ class PlayerModel(BaseModel):
                 self.speed += dir_coef * ((self.loading_speed,)*2)
             # Update status
             if self.pos != Dir.DOWN or any(dir_coef):
+                self.save_dir = Dir.NONE
                 self.pos = Dir.NONE
                 self.fixed = False
         # Reset loading
@@ -249,6 +256,7 @@ class PlayerModel(BaseModel):
         # Loop over changes
         while not self.border.rect.contains(self.rect):
             self.fixed = True
+            self.save_dir = self.control_dir
             dct = {}
             # Test against the 4 directions.
             for direc, attr in collide_dct.items():
@@ -275,10 +283,10 @@ class PlayerModel(BaseModel):
         """Current direction with x and y in (-1, 0, 1)."""
         # Static case
         if self.fixed:
-            if not any(self.control_dir) or \
-               sum(self.control_dir*self.pos) > 0:
+            if not any(self.save_dir) or \
+               sum(self.save_dir*self.pos) > 0:
                 return xytuple(0,0)
-            current_dir = self.control_dir - self.pos
+            current_dir = self.save_dir - self.pos
             sign = lambda arg: cmp(arg, 0)
             return current_dir.map(sign)
         # Dynamic case
