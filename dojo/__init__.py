@@ -38,7 +38,7 @@ class Dojo(BaseControl):
 def main():
     dojo = Dojo()
     dojo.display_fps = False
-    dojo.settings.fps = 120
+    dojo.settings.fps = 180
     dojo.settings.size = 1280, 720
     dojo.settings.fullscreen = False
     dojo.settings.debug_speed = 1.0
