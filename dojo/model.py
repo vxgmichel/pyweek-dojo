@@ -52,7 +52,7 @@ class DojoModel(BaseModel):
     def update_speed(self):
         # Settings
         threshold = 16
-        slow = 0.1
+        slow = 0.2
         # Get distance
         lst = [float("inf")]
         for i in (1,2):

@@ -144,7 +144,7 @@ class DojoController(BaseController):
             return
         # Generic action
         if generic:
-            return self.model.register(action, down)
+            return self.model.register(action)
         # Player related action
         return self.model.register(action, player, down)
 
