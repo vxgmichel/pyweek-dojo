@@ -1,6 +1,7 @@
 """Module with useful classes and functions."""
 
 import operator
+from math import ceil
 from functools import wraps
 from collections import namedtuple, defaultdict
 from pygame import Color
@@ -94,6 +95,16 @@ class cursoredlist(list):
         """Set the cursor to an arbitrary index value."""
         if len(self):
             self.cursor = index % len(self)
+
+
+def scale_rects(rects, source_size, dest_size):
+    if not all(source_size):
+        return
+    ratio = xytuple(*dest_size).map(float)/source_size
+    for rect in rects:
+        topleft = (ratio * rect.topleft).map(int)
+        bottomright = (ratio * rect.bottomright).map(ceil)
+        rect.topleft, rect.size = topleft, bottomright - topleft
 
 
 class cachedict(defaultdict):

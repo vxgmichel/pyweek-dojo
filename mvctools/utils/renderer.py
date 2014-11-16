@@ -1,8 +1,22 @@
 import pygame as pg
 from mvctools.sprite import AutoSprite
-from mvctools.common import cache
+from mvctools.common import cache, xytuple
+from mvctools.sprite import ViewSprite
+from mvctools import BaseView
 from pygame import Color, Rect
 
+def from_parent(lst):
+    # Getter generator
+    gen_getter = lambda attr: lambda self: getattr(self.parent, attr)
+    # Decorator
+    def decorator(cls):
+        # Loop over attributes
+        for attr in lst:
+            # Set property
+            setattr(cls, attr, property(gen_getter(attr)))
+        return cls
+    # Return
+    return decorator
 
 def opacify(source, opacity):
     surface = source.convert_alpha()
@@ -60,39 +74,12 @@ class LineSprite(AutoSprite):
         return self.image.get_rect(**kwargs)
 
 
+@from_parent(["font_size", "font_name", "antialias", "color", "opacity"])
 class ChilrenLineSprite(LineSprite):
-
-    # Font
-    
-    @property
-    def font_size(self):
-        return self.parent.font_size
-    
-    @property
-    def font_name(self):
-        return self.parent.font_name
-    
-    # Renderer
 
     @property
     def text(self):
         return self.parent.get_child_text(self.id)
-
-    @property
-    def antialias(self):
-        return self.parent.antialias
-    
-    @property
-    def color(self):
-        return self.parent.color
-    
-    # Processing
-
-    @property
-    def opacity(self):
-        return self.parent.opacity
-    
-    # Position
 
     @property
     def pos(self):
@@ -105,14 +92,75 @@ class ChilrenLineSprite(LineSprite):
     def init(self, lid):
         self.id = lid
 
-    # Layer
+class TextView(BaseView):
+    
+    # Font 
+    font_size = 0
+    font_name = ""
+    # Renderer
+    text = ""
+    antialias = True
+    color = "black"
+    # Processing
+    opacity = 1.0
+    # Position
+    pos = 0,0
+    reference = "center"
+    alignment = "left"
+    # Margin
+    margin = 0
 
-    def get_layer(self):
-        return self.parent.layer + 1
+    def init(self):
+        self.lines = []
+
+    def update(self):
+        self.update_lines()
+
+    def get_child_text(self, lid):
+        try: return self.text.splitlines()[lid]
+        except IndexError: return ''
+
+    def get_child_reference(self, lid):
+        if self.alignment in ["center", "centerx"]:
+            return "midtop"
+        if self.alignment in ["left", "right"]:
+            return "top" + self.alignment
+        raise ValueError('Not a valid alignment')
+
+    def update_lines(self):
+        nb_lines = len(self.text.splitlines())
+        for i in range(len(self.lines), nb_lines):
+            self.lines.append(ChilrenLineSprite(self, i))
+        for i in range(len(self.lines), nb_lines, -1):
+            self.lines.kill()
+            
+    def get_child_pos(self, lid):
+        previous = self.lines[lid-1] if lid else None
+        margin = xytuple(0, self.margin)
+        # Left aligment
+        if self.alignment == "left":
+            if previous:
+                return margin + previous.bottomleft
+            return 0,0
+        # Centered aligment
+        if self.alignement == "center":
+            if previous:
+                return margin + previous.midbottom
+            max_width = max(child.rect.w for child in self.lines)
+            return max_width/2, 0
+        # Right aligment
+        elif self.alignment == "right":
+            if previous:
+                return margin + previous.bottomright
+            return max_width, 0
 
 
+@from_parent(["font_size", "font_name", "antialias", "color", "opacity",
+              "text", "bgd_color", "bgd_image", "margin"])
+class ChildrenTextView(TextView):
+    pass
 
-class TextSprite(AutoSprite):
+class TextSprite(ViewSprite):
 
     # Font 
     font_size = 0
@@ -130,60 +178,24 @@ class TextSprite(AutoSprite):
     # Margin
     margin = 0 
     # Background
-    background = None
+    bgd_color = None
+    bgd_image = None
+    # View
+    view_cls = ChildrenTextView
 
     def init(self, **kwargs):
+        ViewSprite.init(self)
         for key, value in kwargs.items():
             setattr(self, key, value)
-        self.update_lines()
-
-    def get_child_text(self, lid):
-        try: return self.text.splitlines()[lid]
-        except IndexError: return ''
-
-    def get_child_reference(self, lid):
-        if self.alignment in ["center", "centerx"]:
-            return "center"
-        if self.alignment in ["left", "right"]:
-            return "mid" + self.alignment
-        raise ValueError('Not a valid alignment')
-
-    def update_lines(self):
-        nb_lines = len(self.text.splitlines())
-        for i in range(len(self.children), nb_lines):
-            ChilrenLineSprite(self, i)
-        for i in range(len(self.children), nb_lines, -1):
-            del self.children[i-1]
-
-    def get_child_pos(self, lid):
-        # Get children size
-        self.update_lines()
-        max_size = max(child.size for child in self.children)
-        # Get alignment
-        attr = self.alignment
-        if self.alignment == "center":
-            attr += "x"
-        # Get coordinates
-        x = getattr(self.rect, attr)
-        y = self.rect.top + max_size.y * (lid + 0.5)
-        y += self.margin * lid
-        return x,y
-
-    @property
-    def size(self):
-        self.update_lines()
-        max_size = max(child.size for child in self.children)
-        size = max_size * (1, len(self.children))
-        return size + (1, len(self.children) * self.margin)
     
-    def get_rect(self):
-        rect = Rect((0,0), self.size)
-        setattr(rect, self.reference, self.pos)
-        return rect
+    @property
+    def screen_size(self):
+        if not self.view.group:
+            return xytuple(0, 0)
+        x = max(sprite.rect.right for sprite in self.view.group)
+        y = max(sprite.rect.bottom for sprite in self.view.group)
+        return xytuple(x, y)
 
-    def get_image(self):
-        if not self.background:
-            return self.image
-        image = Surface(self.size)
-        image.fill(self.background)
-        return image
+    def get_rect(self):
+        kwargs = {self.reference: self.pos}
+        return self.image.get_rect(**kwargs)

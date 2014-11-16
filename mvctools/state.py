@@ -3,6 +3,7 @@ import pygame
 from mvctools.model import BaseModel
 from mvctools.controller import BaseController
 from mvctools.view import BaseView
+from mvctools.common import scale_rects
 
 
 class NextStateException(Exception):
@@ -38,8 +39,25 @@ class BaseState(object):
     def tick(self):
         mvc = self.controller, self.model, self.view
         with TickContext(self):
-            return any(entity._update() for entity in mvc)
+            return self.controller._update() or \
+                   self.model._update() or \
+                   self.update_view()
         return True
+
+    def update_view(self):
+        # Get the screens
+        actual_screen = self.get_surface()
+        screen, dirty = self.view._update()
+        # Scale
+        if actual_screen != screen:
+            size = actual_screen.get_size()
+            self.control.resource.scale(screen, size, actual_screen)
+            scale_rects(dirty, screen.get_size(), size)
+        # Update
+        pygame.display.update(dirty)
+
+    def get_surface(self):
+        return pygame.display.get_surface()
 
     def reload(self):
         self.controller._reload()

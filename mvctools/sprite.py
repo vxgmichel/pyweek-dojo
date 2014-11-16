@@ -1,12 +1,11 @@
 import pygame as pg
 from pygame.sprite import DirtySprite
 from pygame import Rect, Surface, transform
-from mvctools.common import xytuple, cachedict
+from mvctools.common import xytuple, cachedict, scale_rects
+from mvctools import BaseView
 
 
 class AutoSprite(DirtySprite):
-
-    size_ratio = None
 
     def __init__(self, parent, *args, **kwargs):
         super(AutoSprite, self).__init__()
@@ -24,6 +23,8 @@ class AutoSprite(DirtySprite):
         # Group handling
         self.group = parent.group
         self.group.add(self)
+        # State
+        self.state = self.parent.state
         # Model
         self.model = model if model else parent.model
         # Resource
@@ -44,7 +45,8 @@ class AutoSprite(DirtySprite):
         self.layer = self.get_layer()
 
     def kill(self):
-        [child.kill() for child in self.children]
+        for child in self.children:
+            child.kill() 
         super(AutoSprite, self).kill()
 
     def register_child(self, child):
@@ -89,11 +91,8 @@ class AutoSprite(DirtySprite):
     
     @property
     def size(self):
-        if not self.size_ratio:
-            return xytuple(*self.image.get_size())
-        return (self.settings.size * self.size_ratio).map(int)
+        return xytuple(*self.image.get_size())
             
-
     # Layer property
 
     @property
@@ -158,6 +157,53 @@ class AutoSprite(DirtySprite):
     def rect(self):
         del self._rect
 
+class ViewSprite(AutoSprite):
+
+    view_cls = BaseView
+    
+    def init(self):
+        self.view = None
+        self.view = self.view_cls(self, self.model)
+
+    def transform(self, screen, dirty):
+        screen_size = screen.get_size()
+        if screen_size == self.size:
+            return screen
+        scale_rects(dirty, screen_size, self.size)
+        return self.resource.scale(screen, self.size)
+
+    def get_image(self):
+        # Reset screen
+        if self.view.screen and (self.transparent or \
+           self.screen_size != self.view.screen.get_size()):
+            self.view.reset_screen()
+        # Get screen
+        screen, dirty = self.view._update()
+        # Transform
+        image = self.transform(screen, dirty)
+        # Dirtyness
+        if dirty:
+            self.parent.source_rect = dirty[0].unionall(dirty[1:])
+            self.parent.set_dirty()
+        # Return
+        return image
+        
+    @property
+    def screen_size(self):
+        return xytuple(*self.rect.size)
+
+    @property
+    def size(self):
+        return self.screen_size
+
+    @property
+    def transparent(self):
+        return not (self.view.bgd_image or self.view.bgd_color)
+
+    def get_surface(self):
+        if not self.transparent:
+            return Surface(self.screen_size)
+        return Surface(self.screen_size, pg.SRCALPHA, 32)
 
 class Animation(object):
 
