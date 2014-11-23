@@ -7,6 +7,7 @@ from pygame import Rect, Surface, transform, draw, Color
 from mvctools import BaseView, AutoSprite, xytuple
 from mvctools.utils import TextSprite
 from mvctools.utils.renderer import opacify
+from mvctools.utils.camera import CameraView
 from dojo.model import DojoModel, PlayerModel, RectModel
 from dojo.common import Dir, DIR_TO_ATTR
 
@@ -276,8 +277,8 @@ class RectSprite(AutoSprite):
 
 
 # Dojo view
-class DojoView(BaseView):
-    """Dojo view for the main game state."""
+class StaticDojoView(BaseView):
+    """Dojo view without the camera move."""
     
     bgd_image = "image/room"
     bgd_color = "darkgrey"
@@ -287,7 +288,19 @@ class DojoView(BaseView):
                         RectModel: RectSprite}
 
     def get_screen(self):
-        """Separate actual screen and view screen."""
+        """Create game screen."""
         return Surface(self.model.size)
+
+
+# Dojo camera view
+class DojoView(CameraView):
+    """Dojo view for the game state."""
+    view_cls = StaticDojoView
+
+    base_resolution = 800, 450
+    
+    def get_screen(self):
+        """Create base screen."""
+        return Surface(self.base_resolution) 
 
 

@@ -69,9 +69,11 @@ class LineSprite(AutoSprite):
                           self.color, self.background)
         return self.opacify(raw, self.opacity)
 
+
     def get_rect(self):
         kwargs = {self.reference: self.pos}
         return self.image.get_rect(**kwargs)
+
 
 
 @from_parent(["font_size", "font_name", "antialias", "color", "opacity"])

@@ -3,10 +3,11 @@
 # Imports
 from pygame import Rect, Color
 from mvctools import BaseModel, xytuple, Timer, property_from_gamedata
+from mvctools.utils.camera import CameraModel
 from dojo.common import Dir
 
 # Dojo model
-class DojoModel(BaseModel):
+class DojoModel(CameraModel):
     """Dojo model for the main game state."""
     
     # Resource to get the model size
@@ -23,6 +24,7 @@ class DojoModel(BaseModel):
         self.resource = self.control.resource
         self.size = self.resource.image.get(self.ref).get_size()
         self.rect = Rect((0,0), self.size)
+        self.init_camera(self.rect, 20.0)
         self.border = BorderModel(self)
         self.players = {i:PlayerModel(self, i) for i in (1,2)}
         self.colliding = False
@@ -52,7 +54,7 @@ class DojoModel(BaseModel):
     def update_speed(self):
         # Settings
         threshold = 16
-        slow = 0.2
+        slow = 0.02#0.2
         # Get distance
         lst = [float("inf")]
         for i in (1,2):
@@ -67,11 +69,26 @@ class DojoModel(BaseModel):
         # Set speed
         if min(lst) > float(threshold):
             self.control.settings.speed = 1.0
+            self.reset_camera()
         else:
             self.control.settings.speed = slow
+            area = self.players[1].rect.union(self.players[2].rect)
+            target_ratio = float(self.rect.w)/self.rect.h
+            actual_ratio = float(area.w)/area.h
+            center = area.center
+            if target_ratio > actual_ratio:
+                area.w = round(area.h * 1.2 * target_ratio)
+                area.h = round(area.h * 1.2)
+            else:
+                area.h = round(area.h * 1.2)
+                area.h = round(area.w * 1.2 / target_ratio)
+            area.center = center
+            self.set_camera(area.clamp(self.rect))
+            
 
     def update(self):
         """Detect collision between the 2 players."""
+        CameraModel.update(self)
         self.update_speed()
         hit = {}
         for i in (1,2):

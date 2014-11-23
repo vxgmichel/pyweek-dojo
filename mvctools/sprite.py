@@ -179,12 +179,15 @@ class ViewSprite(AutoSprite):
             self.view.reset_screen()
         # Get screen
         screen, dirty = self.view._update()
+        dirty = [rect for rect in dirty if rect]
         # Transform
         image = self.transform(screen, dirty)
         # Dirtyness
         if dirty:
-            self.parent.source_rect = dirty[0].unionall(dirty[1:])
-            self.parent.set_dirty()
+            rect = dirty[0].unionall(dirty[1:])
+            if rect:
+                #self.source_rect = rect
+                self.set_dirty()
         # Return
         return image
         
@@ -197,7 +200,7 @@ class ViewSprite(AutoSprite):
         return self.screen_size
 
     @property
-    def transparent(self):
+    def transparent(self):        
         return not (self.view.bgd_image or self.view.bgd_color)
 
     def get_surface(self):
