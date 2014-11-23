@@ -64,6 +64,10 @@ class BaseState(object):
         self.model._reload()
         self.view._reload()
 
+    @property
+    def delta(self):
+        return 1.0 / self.current_fps
+
     def run(self):
         self.current_fps = self.control.settings.fps
         # Display fps
@@ -88,7 +92,6 @@ class BaseState(object):
             if millisec:
                 self.current_fps = 1000.0/millisec
                 self.current_fps /= float(self.control.settings.debug_speed)
-                self.current_fps /= float(self.control.settings.speed)
             rate = clock.get_fps()
             if rate and string:
                     caption = string.format(int(rate))

@@ -109,8 +109,7 @@ class BaseController(object):
             bool: True to indicate that the model wants to stop
             the current state, False otherwise.
         """
-        method = getattr(self.model, 'register_' + name)
-        return bool(method(*args, **kwargs))
+        return bool(self.model.register(name, *args, **kwargs))
 
     def is_quit_event(self, event):
         """Define what a quit event is. Include pygame.Quit and Alt+F4.

@@ -6,7 +6,6 @@ class BaseSettings(object):
         self.control = control
         self.font_dir = "font"
         self.debug_speed = 1.0
-        self.speed = 1.0
         self.display_hitbox = False
         self._fps = 60
         self._width = 1280

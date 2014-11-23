@@ -13,18 +13,36 @@ class DojoModel(CameraModel):
     # Resource to get the model size
     ref = "room"
 
+    # Camera speed
+    speed = 300 # pixel / s
+
+    def init(self):
+        """Initialize camera."""
+        self.resource = self.control.resource
+        self.size = self.resource.image.get(self.ref).get_size()
+        self.room_rect = Rect((0,0), self.size)
+        self.init_camera(self.room_rect, self.speed)
+        self.room = RoomModel(self, self.room_rect)
+
+    def register(self, *args, **kwargs):
+        # Forward actions
+        return self.room.register(*args, **kwargs)
+
+        
+# Room model
+class RoomModel(BaseModel):
+    """Dojo model for the main game state."""
+
     # Damping when two players collide
     damping = 0.8
 
     # Title
     text = "Dojo"
 
-    def init(self):
+    def init(self, room_rect):
         """Initialize players and borders."""
-        self.resource = self.control.resource
-        self.size = self.resource.image.get(self.ref).get_size()
-        self.rect = Rect((0,0), self.size)
-        self.init_camera(self.rect, 20.0)
+        self.rect = room_rect
+        self.size = self.rect.size
         self.border = BorderModel(self)
         self.players = {i:PlayerModel(self, i) for i in (1,2)}
         self.colliding = False
@@ -54,7 +72,7 @@ class DojoModel(CameraModel):
     def update_speed(self):
         # Settings
         threshold = 16
-        slow = 0.02#0.2
+        slow = 0.2
         # Get distance
         lst = [float("inf")]
         for i in (1,2):
@@ -68,11 +86,14 @@ class DojoModel(CameraModel):
             lst.append(abs(pos_1-pos_3))
         # Set speed
         if min(lst) > float(threshold):
-            self.control.settings.speed = 1.0
-            self.reset_camera()
+            self.time_speed = 1.0
+            self.parent.reset_camera()
         else:
-            self.control.settings.speed = slow
+            self.time_speed = slow
             area = self.players[1].rect.union(self.players[2].rect)
+            if self.parent.is_camera_set and \
+               self.parent.target_rect.contains(area.clamp(self.rect)):
+                return
             target_ratio = float(self.rect.w)/self.rect.h
             actual_ratio = float(area.w)/area.h
             center = area.center
@@ -83,12 +104,11 @@ class DojoModel(CameraModel):
                 area.h = round(area.h * 1.2)
                 area.h = round(area.w * 1.2 / target_ratio)
             area.center = center
-            self.set_camera(area.clamp(self.rect))
+            self.parent.set_camera(area.clamp(self.rect))
             
 
     def update(self):
         """Detect collision between the 2 players."""
-        CameraModel.update(self)
         self.update_speed()
         hit = {}
         for i in (1,2):

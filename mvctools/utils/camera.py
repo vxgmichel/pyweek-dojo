@@ -12,8 +12,6 @@ class CameraModel(BaseModel):
         self.base_rect = Rect(rect)
         self.camera_rect = Rect(rect)
         self.target_rect = Rect(rect)
-        diag = xytuple(*rect.topleft) - rect.bottomright
-        self.base_length = abs(diag)
         self.camera_speed = speed
 
     def reset_camera(self, force=False):
@@ -24,48 +22,39 @@ class CameraModel(BaseModel):
     def set_camera(self, rect):
         self.target_rect = Rect(rect)
 
+    @property
+    def is_camera_set(self):
+        return not self.target_rect == self.base_rect
+
     def update(self):
-        print self.target_rect, self.camera_rect
+        # No speed
         if self.camera_speed is None:
             self.camera_rect = Rect(self.target_rect)
             return
-        dct = {}
-        step = float(self.base_length * self.delta * self.camera_speed)
-        for attr in ("w", "h", "centerx", "centery"):
+        # Get reference
+        delta = {}
+        for attr in ("top", "left", "bottom", "right"):
             target = getattr(self.target_rect, attr)
             current = getattr(self.camera_rect, attr)
-            delta = float(target) - current
-            distance = abs(delta)
-            if distance <= step:
-                dct[attr] = target
-            else:
-               delta *= step/distance
-               dct[attr] = current + delta
-        self.camera_rect = Rect(0, 0, dct["w"], dct["h"])
-        self.camera_rect.center = dct["centerx"], dct["centery"] 
-        
-##    def update(self):
-##        print self.target_rect, self.camera_rect
-##        if self.camera_speed is None:
-##            self.camera_rect = Rect(self.target_rect)
-##            return
-##        dct = {}
-##        step = float(self.base_length * self.delta * self.camera_speed)
-##        for attr in ("topleft", "bottomright"):
-##            target = getattr(self.target_rect, attr)
-##            current = getattr(self.camera_rect, attr)
-##            delta = xytuple(*target).map(float) - current
-##            distance = abs(delta)
-##            if distance <= step:
-##                dct[attr] = xytuple(*target)
-##            else:
-##               delta *= (step/distance,) * 2
-##               print attr, delta
-##               dct[attr] = delta + current
-##        self.camera_rect.size = dct["bottomright"] - dct["topleft"]
-##        self.camera_rect.topleft = dct["topleft"]
-##        
-        
+            delta[attr] = float(target) - current
+        ref = max(map(abs, delta.values()))
+        step = float(self.delta * self.camera_speed)
+        # Close enough
+        if ref <= step:
+            self.camera_rect = Rect(self.target_rect)
+            return
+        # Get new values
+        ratio = step/ref
+        dct = {}
+        for attr in ("top", "left", "bottom", "right"):
+            current = getattr(self.camera_rect, attr)
+            dct[attr] = current + delta[attr] * ratio
+        # Create rect
+        for attr in dct:
+            dct[attr] = round(dct[attr])
+        size = dct["right"] - dct["left"], dct["bottom"] - dct["top"]
+        topleft = dct["left"], dct["top"]
+        self.camera_rect = Rect(topleft, size)        
         
 
 class CameraSprite(ViewSprite):

@@ -8,10 +8,11 @@ from mvctools import BaseView, AutoSprite, xytuple
 from mvctools.utils import TextSprite
 from mvctools.utils.renderer import opacify
 from mvctools.utils.camera import CameraView
-from dojo.model import DojoModel, PlayerModel, RectModel
+from dojo.model import PlayerModel, RectModel, RoomModel
 from dojo.common import Dir, DIR_TO_ATTR
 
 
+# Settings for text sprites
 class WhiteTextSprite(TextSprite):
 
     # Font settings
@@ -23,9 +24,9 @@ class WhiteTextSprite(TextSprite):
     margin = -3
 
 
-# Dojo sprite
-class DojoSprite(AutoSprite):
-    """Dojo background sprite."""
+# Room sprite
+class RoomSprite(AutoSprite):
+    """Room background sprite."""
 
     string_dct = {1: ("P1\n-RDFG-\nJUMP-X", "left"),
                   2: ("P2\nARROWS\nJUMP-P", "right"),}
@@ -284,7 +285,7 @@ class StaticDojoView(BaseView):
     bgd_color = "darkgrey"
     
     sprite_class_dct = {PlayerModel: PlayerSprite,
-                        DojoModel: DojoSprite,
+                        RoomModel: RoomSprite,
                         RectModel: RectSprite}
 
     def get_screen(self):

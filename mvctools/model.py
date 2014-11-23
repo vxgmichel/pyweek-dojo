@@ -38,6 +38,8 @@ class BaseModel(object):
      - **self.isroot**: True if it is the main model
     """
 
+    time_speed = 1.0
+
     def __init__(self, parent, *args, **kargs):
         """Initialize the model with its parent and register itself.
 
@@ -167,7 +169,7 @@ class BaseModel(object):
     @property
     def delta(self):
         """Time difference with last update."""
-        return 1.0/self.state.current_fps
+        return self.time_speed * self.parent.delta
 
     def __iter__(self):
         """Iterator support.
