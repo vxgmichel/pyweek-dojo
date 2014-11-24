@@ -24,6 +24,13 @@ class DojoModel(CameraModel):
         self.init_camera(self.room_rect, self.speed)
         self.room = RoomModel(self, self.room_rect)
 
+    def pause(self, pause, callback):
+        self.room.time_speed, temp = 0, self.room.time_speed
+        def target(timer):
+            callback()
+            self.room.time_speed = temp
+        Timer(self, stop=pause, callback=target).start()
+
     def register(self, *args, **kwargs):
         # Forward actions
         return self.room.register(*args, **kwargs)
@@ -86,10 +93,10 @@ class RoomModel(BaseModel):
             lst.append(abs(pos_1-pos_3))
         # Set speed
         if min(lst) > float(threshold):
-            self.time_speed = 1.0
+            if self.time_speed: self.time_speed = 1.0
             self.parent.reset_camera()
         else:
-            self.time_speed = slow
+            if self.time_speed: self.time_speed = slow
             area = self.players[1].rect.union(self.players[2].rect)
             if self.parent.is_camera_set and \
                self.parent.target_rect.contains(area.clamp(self.rect)):
@@ -104,12 +111,27 @@ class RoomModel(BaseModel):
                 area.h = round(area.h * 1.2)
                 area.h = round(area.w * 1.2 / target_ratio)
             area.center = center
+            new_zoom = not self.parent.is_camera_set
             self.parent.set_camera(area.clamp(self.rect))
-            
+            return new_zoom
 
     def update(self):
+        """Decompose players trajectory into steps."""
+        maxi = max(len(self.players[pid].steps) for pid in (1,2)) - 1
+        for i in range(maxi+1):
+            for pid in (1,2):
+                length = len(self.players[pid].steps) - 1
+                index = int(round(float(i*length)/maxi)) if maxi else 0
+                self.players[pid].rect = self.players[pid].steps[index]
+            if self.update_step():
+                break
+
+    def update_step(self):
         """Detect collision between the 2 players."""
-        self.update_speed()
+        return self.update_speed() or self.update_hit() or self.update_collision()
+
+    def update_hit(self):
+        """Test collision between players."""
         hit = {}
         for i in (1,2):
             j = 2 if i==1 else 1
@@ -119,17 +141,25 @@ class RoomModel(BaseModel):
             tie = not index
         collide = tie or any(hit.values())
         if collide and not self.colliding:
-            for i in (1,2):
-                j = 2 if i==1 else 1
-                if hit[i] and not hit[j]:
-                    self.score_dct[i] += 1
-                if hit[i]:
-                    self.players[j].set_ko()
-            for player in self.players.values():
-                player.speed *= (-self.damping,)*2
-                self.colliding = True
+            def callback():
+                for i in (1,2):
+                    j = 2 if i==1 else 1
+                    if hit[i] and not hit[j]:
+                        self.score_dct[i] += 1
+                    if hit[i]:
+                        self.players[j].set_ko()
+                for player in self.players.values():
+                    player.speed *= (-self.damping,)*2
+            self.colliding = True
+            self.parent.pause(1.0, callback)
+            return True
         elif not collide:
             self.colliding = False
+
+    def update_collision(self):
+        """Test collision against the wall"""
+        for pid in (1,2):
+            self.players[pid].update_collision()
 
 
 # Border modem
@@ -217,6 +247,7 @@ class PlayerModel(BaseModel):
         self.pos = Dir.DOWN
         self.fixed = True
         self.ko = False
+        self.steps = [self.rect]
         # Animation timer
         self.timer = Timer(self,
                            stop=self.period,
@@ -327,16 +358,8 @@ class PlayerModel(BaseModel):
             sign = lambda arg: cmp(arg, 0)
             return current_dir.map(sign)
         # Dynamic case
-        lst = []
-        for x in range(-1,2):
-            for y in range(-1,2):
-                if x or y:
-                    norm = xytuple(x,y).map(float)
-                    norm /= (abs(norm),)*2
-                    value = abs(self.speed-norm)
-                    lst.append((value, x, y))
-        _, x, y = min(lst)
-        return xytuple(x,y)
+        return closest_dir(self.speed, normalized=True)
+
 
     def get_rect_from_dir(self, direction):
         """Compute a hitbox inside the player in a given direction."""
@@ -384,11 +407,36 @@ class PlayerModel(BaseModel):
         step += self.remainder
         intstep = step.map(round)
         self.remainder = step - intstep
-        # Update rect
-        self.rect.move_ip(intstep)
-        self.update_collision()
+        # Register steps
+        args = Rect(self.rect), self.rect.move(intstep)
+        self.steps = generate_steps(*args)
         # Update timer
         if self.loading:
             delta = self.load_factor_max - self.load_factor_min
             ratio = self.load_factor_min + self.loading_ratio * delta
             self.timer.start(ratio)
+
+
+### BREAK ###
+
+def generate_steps(old, new):
+    lst = [old]
+    while lst[-1].center != new.center:
+        delta = xytuple(*new.center)-lst[-1].center
+        step = closest_dir(delta)
+        lst.append(lst[-1].move(step))
+    return lst
+
+ALL_DIRS = [xytuple(x,y)
+                for x in range(-1,2)
+                    for y in range(-1,2)
+                        if x or y]
+
+ALL_NORMALIZED_DIRS = [d/(2*(abs(d),)) for d in ALL_DIRS]
+            
+def closest_dir(vector, normalized=False):
+    dirs = ALL_NORMALIZED_DIRS if normalized else ALL_DIRS
+    _, direc = min((abs(vector - direc), direc) for direc in dirs)
+    if normalized:
+        return direc.map(round).map(int)
+    return direc

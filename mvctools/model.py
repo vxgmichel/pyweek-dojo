@@ -120,12 +120,22 @@ class BaseModel(object):
         Return:
             bool: True to stop the current state, False otherwise.
         """
-        return self.update() or self._update_children()
+        return self.update() or self._update_children() or self.post_update()
 
     def update(self):
         """Empty method to override.
 
-        Called at each tick of the state.
+        Called at each tick of the state before updating the children.
+
+        Return:
+            bool: True to stop the current state, False otherwise.
+        """
+        pass
+
+    def post_update(self):
+        """Empty method to override.
+
+        Called at each tick of the state after updating the children
 
         Return:
             bool: True to stop the current state, False otherwise.
