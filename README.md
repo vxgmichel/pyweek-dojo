@@ -68,10 +68,7 @@ in the main() function (`dojo/__init__.py`):
 
  - **dojo.settings.fullscreen**: Set it to True for fullscreen mode, default is False.
  - **dojo.settings.size**: The window size is completely decoupled from the game size. 
-   Any value should work.
- - **dojo.settings.fps**: The actual speed of the game is not affected by this value. 
-   However, raising it up will result in a better precision for collision, 
-   but will keep you processor busier. 120 is a good compromise.
+ - **dojo.settings.fps**: The actual speed of the game is not affected by this value.
 
 ## MVC Tools
 
