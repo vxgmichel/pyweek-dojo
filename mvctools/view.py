@@ -66,11 +66,22 @@ class BaseView(object):
         self.update()
         self.gen_sprites()
         self.group.update()
+        # Changes on a transparent background
+        if self.transparent and any(sprite.dirty for sprite in self.group):
+            self.reset_screen()
+        # No change on a transparent background
+        elif self.transparent and self.screen:
+            return self.screen, []
         # Create screen
         if self.screen is None:
             self.create_screen()
         # Draw and display
         dirty = self.group.draw(self.screen, self.background)
+        # Force reset for dirtiness
+        for sprite in self.group:
+            if sprite.dirty == 1:
+                sprite.dirty = 0
+        # Return
         return self.screen, dirty
 
     def update(self):
@@ -97,6 +108,10 @@ class BaseView(object):
     @property
     def size(self):
         return self.screen.get_size()
+
+    @property
+    def transparent(self):        
+        return not (self.bgd_image or self.bgd_color)
 
     def scale_as_background(self, image=None, color=None):
         if not image and not color:
