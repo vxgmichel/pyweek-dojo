@@ -4,7 +4,7 @@
 from pygame import Rect, Color
 from mvctools import BaseModel, xytuple, Timer, property_from_gamedata
 from mvctools.utils.camera import CameraModel
-from dojo.common import Dir
+from dojo.common import Dir, closest_dir, generate_steps, perfect_collide
 
 # Dojo model
 class DojoModel(CameraModel):
@@ -130,16 +130,34 @@ class RoomModel(BaseModel):
         """Detect collision between the 2 players."""
         return self.update_speed() or self.update_hit() or self.update_collision()
 
+
+    def test(rect1, img1, rect2, img2):
+        rect = rect1.clip(rect2)
+        if not rect: 
+            return False
+        surf = Surface(rect.size, SRCALPHA, 32)
+        surf.blit(img1, (0,0), rect.move(rect1.topleft))
+        surf.blit(img2, (0,0), rect.move(rect2.topleft))
+
     def update_hit(self):
         """Test collision between players."""
-        hit = {}
+        # Test ko
+        if any(self.players[pid].ko for pid in (1,2)):
+            return
+        # Prepare collision function
+        hit = {1:False, 2:False}
+        collide = False
+        img1, img2 = (self.players[pid].get_image() for pid in (1,2))
+        collide_func = lambda r1, r2: perfect_collide(r1, img1, r2, img2)
+        # Test collision
         for i in (1,2):
             j = 2 if i==1 else 1
-            lst = [self.players[j].legs, self.players[j].body, self.players[j].head]
-            index = self.players[i].legs.collidelist(lst)
-            hit[i] = index > 0
-            tie = not index
-        collide = tie or any(hit.values())
+            if collide_func(self.players[i].legs, self.players[j].legs):
+                collide = True
+                break
+            elif collide_func(self.players[i].legs, self.players[j].rect):
+                hit[i] = collide = True
+        # New collision
         if collide and not self.colliding:
             def callback():
                 for i in (1,2):
@@ -153,6 +171,7 @@ class RoomModel(BaseModel):
             self.colliding = True
             self.parent.pause(1.0, callback)
             return True
+        # Update flag
         elif not collide:
             self.colliding = False
 
@@ -416,27 +435,3 @@ class PlayerModel(BaseModel):
             ratio = self.load_factor_min + self.loading_ratio * delta
             self.timer.start(ratio)
 
-
-### BREAK ###
-
-def generate_steps(old, new):
-    lst = [old]
-    while lst[-1].center != new.center:
-        delta = xytuple(*new.center)-lst[-1].center
-        step = closest_dir(delta)
-        lst.append(lst[-1].move(step))
-    return lst
-
-ALL_DIRS = [xytuple(x,y)
-                for x in range(-1,2)
-                    for y in range(-1,2)
-                        if x or y]
-
-ALL_NORMALIZED_DIRS = [d/(2*(abs(d),)) for d in ALL_DIRS]
-            
-def closest_dir(vector, normalized=False):
-    dirs = ALL_NORMALIZED_DIRS if normalized else ALL_DIRS
-    _, direc = min((abs(vector - direc), direc) for direc in dirs)
-    if normalized:
-        return direc.map(round).map(int)
-    return direc

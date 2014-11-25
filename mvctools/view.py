@@ -107,14 +107,14 @@ class BaseView(object):
         pass
     
     def gen_sprites(self):
-        for key,obj in self.model.get_model_dct():
-            if key not in self.sprite_dct:
-                cls = self.get_sprite_class(obj)
-                if cls:
-                    self.sprite_dct[key] = cls(self, model=obj)
+        for _, obj in self.model.get_model_dct():
+            self.gen_sprite(obj)
 
-    def get_sprite_class(self, obj):
-        return self.sprite_class_dct.get(obj.__class__, None)
+    def gen_sprite(self, obj):
+        if obj.key not in self.sprite_dct:
+            cls = self.sprite_class_dct.get(obj.__class__, None)
+            if cls:
+                self.sprite_dct[obj.key] = cls(self, model=obj)
 
     @classmethod
     def register_sprite_class(cls, obj_cls, sprite_cls):
@@ -123,6 +123,16 @@ class BaseView(object):
     def get_models_at(self, pos):
         return [sprite.model
                 for sprite in reversed(self.group.get_sprites_at(pos))]
+
+    def get_sprite_from(self, model):
+        self.gen_sprite(model)
+        if model.key in self.sprite_dct: 
+            return self.sprite_dct[model.key]
+        gen_results = (sprite.view.get_sprite_from(model)
+                           for sprite in self.group
+                               if hasattr(sprite, "view"))
+        gen_filtered = (result for result in gen_results if result)
+        return next(gen_filtered, None)
 
     @property
     def size(self):

@@ -153,6 +153,15 @@ class BaseModel(object):
         value = (self.key, self)
         return chain([value], *iterators)
 
+    def get_image(self):
+        """Get the current image.
+
+        Warning: this breaks the model independance.
+        Use with care.
+        """
+        sprite = self.state.view.get_sprite_from(self)
+        return sprite.get_image() if sprite else None
+
     def register(self, action, *args, **kwargs):
         """Register an action.
 
