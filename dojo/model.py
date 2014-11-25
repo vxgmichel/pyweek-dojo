@@ -148,7 +148,9 @@ class RoomModel(BaseModel):
         hit = {1:False, 2:False}
         collide = False
         img1, img2 = (self.players[pid].get_image() for pid in (1,2))
-        collide_func = lambda r1, r2: perfect_collide(r1, img1, r2, img2)
+        pos1, pos2 = (self.players[pid].rect.topleft for pid in (1,2))
+        collide_func = lambda r1, r2: perfect_collide(r1, img1, pos1,
+                                                      r2, img2, pos2)
         # Test collision
         for i in (1,2):
             j = 2 if i==1 else 1
@@ -224,7 +226,7 @@ class PlayerModel(BaseModel):
     load_factor_max = 10 # period-1
 
     # Hitbox
-    hitbox_ratio = 0.25
+    hitbox_ratio = 0.33
 
     # Direction to Rect attributes for wall collision
     collide_dct = {Dir.DOWN: "bottom",

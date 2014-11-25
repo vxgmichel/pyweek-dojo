@@ -42,5 +42,5 @@ def main():
     dojo.settings.size = 1280, 720
     dojo.settings.fullscreen = False
     dojo.settings.debug_speed = 1.0
-    dojo.settings.display_hitbox = True
+    dojo.settings.display_hitbox = False
     dojo.run()

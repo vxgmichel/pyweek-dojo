@@ -66,6 +66,12 @@ class DojoController(BaseController):
             iterator = (direction for direction in lst if any(direction))
             direction = next(iterator, xytuple(0,0))
             self.register("dir", player, direction)
+        # Special keys
+        dct = pg.key.get_pressed()
+        special_keys = (key for key, value in self.key_dct.items()
+                        if value[0] == "activate")
+        for key in special_keys:
+            self.register_key(key, dct[key])
 
     def handle_event(self, event):
         """Process the different type of events."""
