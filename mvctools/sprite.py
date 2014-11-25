@@ -175,7 +175,7 @@ class ViewSprite(AutoSprite):
     def get_image(self):
         # Reset screen
         if self.view.screen and \
-           self.screen_size != self.view.screen.get_size():
+           self.screen_size != self.view.size:
             self.view.reset_screen()
         # Get screen
         screen, dirty = self.view._update()
@@ -204,9 +204,7 @@ class ViewSprite(AutoSprite):
         return self.view.transparent
 
     def get_surface(self):
-        if not self.transparent:
-            return Surface(self.screen_size)
-        return Surface(self.screen_size, pg.SRCALPHA, 32)
+        return self.screen_size
 
 class Animation(object):
 

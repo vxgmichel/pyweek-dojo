@@ -296,12 +296,9 @@ class StaticDojoView(BaseView):
 # Dojo camera view
 class DojoView(CameraView):
     """Dojo view for the game state."""
-    view_cls = StaticDojoView
 
-    base_resolution = 800, 450
-    
-    def get_screen(self):
-        """Create base screen."""
-        return Surface(self.base_resolution) 
+    view_cls = StaticDojoView
+    transparent = False
+    fixed_size = 800, 450
 
 

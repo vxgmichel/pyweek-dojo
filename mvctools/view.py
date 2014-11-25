@@ -5,12 +5,32 @@ from functools import partial
 import mvctools
 from mvctools.common import xytuple, cachedict, Color
 
-AutoGroup = partial(LayeredDirty, _use_updates = True, _time_threshold = 1000)
+class AutoGroup(LayeredDirty):
+
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault("_time_threshold", 9e9)
+        LayeredDirty.__init__(self, *args, **kwargs)
+
+    def draw(self, screen, bgd=None):
+        result = LayeredDirty.draw(self, screen, bgd)
+        # Force flag reset
+        for sprite in self:
+            sprite.dirty = 0 if sprite.dirty < 2 else 2
+        # Return
+        return result
+
+    def reset_update(self):
+        self._use_update = False
+
+    @property
+    def is_dirty(self):
+        return any(sprite.dirty for sprite in self)
 
 class BaseView(object):
     
     bgd_image = None
     bgd_color = None
+    fixed_size = None
     sprite_class_dct = {}
 
     def __init__(self, parent, model):
@@ -25,7 +45,6 @@ class BaseView(object):
         self.group = AutoGroup()
         self.screen = None
         self.background = None
-        self.first_update = True
         # Call user initialisation
         self.init()
 
@@ -41,15 +60,23 @@ class BaseView(object):
         pass
 
     def create_screen(self):
-        self.first_update = True
         self.screen = self.get_screen()
         self.background = self.get_background()
+        self.group.reset_update()
 
     def reset_screen(self):
         self.screen = None
 
     def get_screen(self):
-        return self.parent.get_surface()
+        size = self.fixed_size
+        if size is None:
+            data = self.parent.get_surface()
+            if isinstance(data, Surface):
+                return data
+            size = data
+        if not self.transparent:
+            return Surface(size)
+        return Surface(size, pg.SRCALPHA, 32)
     
     def get_background(self):
         image = self.resource.get(self.bgd_image) if self.bgd_image else None
@@ -59,15 +86,12 @@ class BaseView(object):
         self.__init__(self, self.model)
 
     def _update(self):
-        # Handle first update
-        self.group._use_update = not self.first_update
-        self.first_update = False
         # Update
         self.update()
         self.gen_sprites()
         self.group.update()
         # Changes on a transparent background
-        if self.transparent and any(sprite.dirty for sprite in self.group):
+        if self.transparent and self.group.is_dirty:
             self.reset_screen()
         # No change on a transparent background
         elif self.transparent and self.screen:
@@ -77,11 +101,6 @@ class BaseView(object):
             self.create_screen()
         # Draw and display
         dirty = self.group.draw(self.screen, self.background)
-        # Force reset for dirtiness
-        for sprite in self.group:
-            if sprite.dirty == 1:
-                sprite.dirty = 0
-        # Return
         return self.screen, dirty
 
     def update(self):

@@ -77,7 +77,7 @@ class BaseState(object):
             string = None
         # Freeze current fps for the first tick
         clock = self.clock_class()
-        self.tick()
+        if self.tick(): return
         # PROFILE
 ##        import cProfile, pstats, StringIO
 ##        pr = cProfile.Profile()

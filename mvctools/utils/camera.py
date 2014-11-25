@@ -76,13 +76,13 @@ class CameraSprite(ViewSprite):
             cropped = Surface(self.model.camera_rect.size).convert_alpha()
             cropped.blit(screen, (0, 0), self.model.camera_rect)
             return ViewSprite.transform(self, cropped, dirty)
-        elif not dirty or not dirty[0].unionall(dirty[1:]):
+        elif not dirty:
             return self.image
         return ViewSprite.transform(self, screen, dirty)
 
     @property
     def screen_size(self):
-        return self.view.screen.get_size()
+        return self.view.size
         
 
 class CameraView(BaseView):
