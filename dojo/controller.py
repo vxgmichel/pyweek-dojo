@@ -71,7 +71,8 @@ class DojoController(BaseController):
         special_keys = (key for key, value in self.key_dct.items()
                         if value[0] == "activate")
         for key in special_keys:
-            self.register_key(key, dct[key])
+            if dct[key]:
+                self.register_key(key, dct[key])
 
     def handle_event(self, event):
         """Process the different type of events."""

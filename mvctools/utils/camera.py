@@ -59,6 +59,10 @@ class CameraModel(BaseModel):
 
 class CameraSprite(ViewSprite):
 
+    def init(self):
+        ViewSprite.init(self)
+        self.next_skip = False
+
     @property
     def view_cls(self):
         return self.parent.view_cls
@@ -71,15 +75,19 @@ class CameraSprite(ViewSprite):
         return self.image.get_rect()
 
     def transform(self, screen, dirty):
+        # Crop the screen with the camera rectangle
         if self.model.camera_rect != screen.get_rect():
             dirty[:] = []
+            self.next_skip = False
             cropped = Surface(self.model.camera_rect.size).convert_alpha()
             cropped.blit(screen, (0, 0), self.model.camera_rect)
             return ViewSprite.transform(self, cropped, dirty)
-        elif not dirty:
+        # No update needed
+        elif not dirty and self.next_skip:
             return self.image
-        res = ViewSprite.transform(self, screen, dirty)
-        return res
+        # Update needed
+        self.next_skip = True
+        return ViewSprite.transform(self, screen, dirty)
         
 
 class CameraView(BaseView):

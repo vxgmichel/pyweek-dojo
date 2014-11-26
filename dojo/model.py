@@ -35,7 +35,7 @@ class DojoModel(CameraModel):
         # Forward actions
         return self.room.register(*args, **kwargs)
 
-        
+     
 # Room model
 class RoomModel(BaseModel):
     """Dojo model for the main game state."""
