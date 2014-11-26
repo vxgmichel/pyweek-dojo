@@ -80,6 +80,7 @@ class RoomModel(BaseModel):
         # Settings
         threshold = 16
         slow = 0.2
+        camera_margin = 1.2
         # Get distance
         lst = [float("inf")]
         for i in (1,2):
@@ -105,11 +106,11 @@ class RoomModel(BaseModel):
             actual_ratio = float(area.w)/area.h
             center = area.center
             if target_ratio > actual_ratio:
-                area.w = round(area.h * 1.2 * target_ratio)
-                area.h = round(area.h * 1.2)
+                area.w = round(area.h * camera_margin * target_ratio)
+                area.h = round(area.h * camera_margin)
             else:
-                area.h = round(area.h * 1.2)
-                area.h = round(area.w * 1.2 / target_ratio)
+                area.h = round(area.h * camera_margin)
+                area.h = round(area.w * camera_margin / target_ratio)
             area.center = center
             new_zoom = not self.parent.is_camera_set
             self.parent.set_camera(area.clamp(self.rect))

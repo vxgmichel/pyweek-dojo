@@ -86,6 +86,10 @@ class CameraSprite(ViewSprite):
         elif not dirty and self.next_skip:
             return self.image
         # Update needed
+        elif not self.next_skip:
+            dirty[:] = []
+            self.set_dirty()
+        # Update
         self.next_skip = True
         return ViewSprite.transform(self, screen, dirty)
         

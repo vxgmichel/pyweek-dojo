@@ -12,8 +12,15 @@ class AutoGroup(LayeredDirty):
         LayeredDirty.__init__(self, *args, **kwargs)
 
     def draw(self, screen, bgd=None):
+        # Handle source_rect
+        dct = dict((sprite, sprite._rect) for sprite in self if sprite.source_rect)
+        for key, value in dct.items():
+            key._rect = value.move(key.source_rect.topleft)
         # Call method
         dirty = LayeredDirty.draw(self, screen, bgd)
+        # Restore rect
+        for key, value in dct.items():
+            key._rect = value
         # Force flag reset
         for sprite in self:
             sprite.dirty = 0 if sprite.dirty < 2 else 2
