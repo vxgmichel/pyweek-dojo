@@ -113,6 +113,13 @@ class BaseView(object):
         self.update_screen()
         # Draw and display
         dirty = self.group.draw(self.screen, self.background)
+        # Update dirty
+        for sprite in self.group:
+            if sprite.source_rect in dirty:
+                dirty.remove(sprite.source_rect)
+                try: dirty += sprite.dirty_rects
+                except AttributeError: pass
+        # Return
         return self.screen, dirty
 
     def update(self):

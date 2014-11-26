@@ -183,8 +183,10 @@ class ViewSprite(AutoSprite):
         if dirty:
             rect = dirty[0].unionall(dirty[1:])
             self.source_rect = rect
+            self.dirty_rects = dirty
             self.set_dirty()
         else:
+            self.dirty_rects = None
             self.source_rect = None
         # Return
         return image
