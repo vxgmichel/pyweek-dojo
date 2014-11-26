@@ -98,21 +98,12 @@ class RoomModel(BaseModel):
             self.parent.reset_camera()
         else:
             if self.time_speed: self.time_speed = slow
-            area = self.players[1].rect.union(self.players[2].rect)
-            if self.parent.is_camera_set and \
-               self.parent.target_rect.contains(area.clamp(self.rect)):
-                return
-            target_ratio = float(self.rect.w)/self.rect.h
-            actual_ratio = float(area.w)/area.h
-            center = area.center
-            if target_ratio > actual_ratio:
-                area.w = round(area.h * camera_margin * target_ratio)
-                area.h = round(area.h * camera_margin)
-            else:
-                area.h = round(area.h * camera_margin)
-                area.h = round(area.w * camera_margin / target_ratio)
-            area.center = center
             new_zoom = not self.parent.is_camera_set
+            area = self.players[1].rect.union(self.players[2].rect)
+            center = area.center
+            area.h = max(area.h, self.rect.h/2)
+            area.w = max(area.w, self.rect.w/2)
+            area.center = center
             self.parent.set_camera(area.clamp(self.rect))
             return new_zoom
 
