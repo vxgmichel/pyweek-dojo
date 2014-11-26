@@ -78,11 +78,8 @@ class CameraSprite(ViewSprite):
             return ViewSprite.transform(self, cropped, dirty)
         elif not dirty:
             return self.image
-        return ViewSprite.transform(self, screen, dirty)
-
-    @property
-    def screen_size(self):
-        return self.view.size
+        res = ViewSprite.transform(self, screen, dirty)
+        return res
         
 
 class CameraView(BaseView):

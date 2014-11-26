@@ -156,6 +156,14 @@ class TextView(BaseView):
                 return margin + previous.bottomright
             return max_width, 0
 
+    @property
+    def fixed_size(self):
+        if not self.group:
+            return xytuple(0, 0)
+        x = max(sprite.rect.right for sprite in self.group)
+        y = max(sprite.rect.bottom for sprite in self.group)
+        return xytuple(x, y)
+
 
 @from_parent(["font_size", "font_name", "antialias", "color", "opacity",
               "text", "bgd_color", "bgd_image", "margin"])
@@ -189,14 +197,6 @@ class TextSprite(ViewSprite):
         ViewSprite.init(self)
         for key, value in kwargs.items():
             setattr(self, key, value)
-    
-    @property
-    def screen_size(self):
-        if not self.view.group:
-            return xytuple(0, 0)
-        x = max(sprite.rect.right for sprite in self.view.group)
-        y = max(sprite.rect.bottom for sprite in self.view.group)
-        return xytuple(x, y)
 
     def get_rect(self):
         kwargs = {self.reference: self.pos}

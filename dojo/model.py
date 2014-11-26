@@ -130,15 +130,6 @@ class RoomModel(BaseModel):
         """Detect collision between the 2 players."""
         return self.update_speed() or self.update_hit() or self.update_collision()
 
-
-    def test(rect1, img1, rect2, img2):
-        rect = rect1.clip(rect2)
-        if not rect: 
-            return False
-        surf = Surface(rect.size, SRCALPHA, 32)
-        surf.blit(img1, (0,0), rect.move(rect1.topleft))
-        surf.blit(img2, (0,0), rect.move(rect2.topleft))
-
     def update_hit(self):
         """Test collision between players."""
         # Test ko

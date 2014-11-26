@@ -12,15 +12,20 @@ class AutoGroup(LayeredDirty):
         LayeredDirty.__init__(self, *args, **kwargs)
 
     def draw(self, screen, bgd=None):
-        result = LayeredDirty.draw(self, screen, bgd)
+        # Call method
+        dirty = LayeredDirty.draw(self, screen, bgd)
         # Force flag reset
         for sprite in self:
             sprite.dirty = 0 if sprite.dirty < 2 else 2
         # Return
-        return result
+        return [rect for rect in dirty if rect]
 
     def reset_update(self):
         self._use_update = False
+
+    @property
+    def is_drawn(self):
+        return self._use_update
 
     @property
     def is_dirty(self):
@@ -59,10 +64,11 @@ class BaseView(object):
     def init(self):
         pass
 
-    def create_screen(self):
-        self.screen = self.get_screen()
-        self.background = self.get_background()
-        self.group.reset_update()
+    def update_screen(self, force=False):
+        if force or self.screen is None:
+            self.screen = self.get_screen()
+            self.background = self.get_background()
+            self.group.reset_update()
 
     def reset_screen(self):
         self.screen = None
@@ -76,7 +82,7 @@ class BaseView(object):
             size = data
         if not self.transparent:
             return Surface(size)
-        return Surface(size, pg.SRCALPHA, 32)
+        return Surface(size, pg.SRCALPHA)
     
     def get_background(self):
         image = self.resource.get(self.bgd_image) if self.bgd_image else None
@@ -86,19 +92,18 @@ class BaseView(object):
         self.__init__(self, self.model)
 
     def _update(self):
+        # Create screen
+        self.update_screen()
         # Update
         self.update()
         self.gen_sprites()
         self.group.update()
         # Changes on a transparent background
-        if self.transparent and self.group.is_dirty:
+        if self.transparent and self.group.is_drawn and self.group.is_dirty \
+           or self.screen and self.size != self.screen.get_size():
             self.reset_screen()
-        # No change on a transparent background
-        elif self.transparent and self.screen:
-            return self.screen, []
         # Create screen
-        if self.screen is None:
-            self.create_screen()
+        self.update_screen()
         # Draw and display
         dirty = self.group.draw(self.screen, self.background)
         return self.screen, dirty
@@ -136,7 +141,9 @@ class BaseView(object):
 
     @property
     def size(self):
-        return self.screen.get_size()
+        if self.fixed_size is None:
+            return self.screen.get_size()
+        return self.fixed_size
 
     @property
     def transparent(self):        

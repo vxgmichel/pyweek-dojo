@@ -170,16 +170,13 @@ class ViewSprite(AutoSprite):
         if screen_size == self.size:
             return screen
         scale_rects(dirty, screen_size, self.size)
-        return self.resource.scale(screen, self.size)
+        if all(screen.get_size()):
+            return self.resource.scale(screen, self.size)
+        return Surface(self.size, screen.get_flags())
 
     def get_image(self):
-        # Reset screen
-        if self.view.screen and \
-           self.screen_size != self.view.size:
-            self.view.reset_screen()
         # Get screen
         screen, dirty = self.view._update()
-        dirty = [rect for rect in dirty if rect]
         # Transform
         image = self.transform(screen, dirty)
         # Dirtyness
@@ -193,7 +190,7 @@ class ViewSprite(AutoSprite):
         
     @property
     def screen_size(self):
-        return xytuple(*self.rect.size)
+        return self.view.size 
 
     @property
     def size(self):

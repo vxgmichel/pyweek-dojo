@@ -1,5 +1,5 @@
 from mvctools import xytuple
-from pygame import Surface, SRCALPHA, BLEND_RGBA_MULT
+from pygame import PixelArray, Surface, BLEND_RGBA_MIN
 
 
 class Dir:
@@ -50,16 +50,24 @@ def generate_steps(old, new):
         lst.append(lst[-1].move(step))
     return lst
 
+def flatten(lst):
+    if isinstance(lst, basestring):
+        raise TypeError("basestring objects are not flattenable")
+    for item in lst:
+        try:
+            for subitem in flatten(item):
+                yield subitem
+        except TypeError:
+            yield item
 
 def perfect_collide(rect1, img1, pos1, rect2, img2, pos2):
     rect = rect1.clip(rect2)
     if not rect: return False
     pos1, pos2 = xytuple(*pos1), xytuple(*pos2)
-    surf = Surface(rect.size, SRCALPHA, 32)
-    surf.blit(img1, (0,0), area=rect.move(-pos1))
+    surf = Surface(rect.size).convert_alpha()
+    surf.blit(img1, (0,0), area=rect.move(-pos1),
+              special_flags=BLEND_RGBA_MIN)
     surf.blit(img2, (0,0), area=rect.move(-pos2), 
-              special_flags=BLEND_RGBA_MULT)
-    return any(surf.get_at((i,j))[3] 
-                   for i in range(rect.w) 
-                       for j in range(rect.h))
+              special_flags=BLEND_RGBA_MIN)
+    return any(flatten(PixelArray(surf)))
 
