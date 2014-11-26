@@ -126,7 +126,7 @@ class AuraSprite(AutoSprite):
     def init(self):
         """Initialize the resources."""
         self.resource_dct = self.generate_resource_dct()
-        self.layer = self.parent.layer + 1
+        self.layer = self.parent.layer + 10
 
     def get_image(self):
         if self.model.fixed and not self.model.ko:
@@ -221,6 +221,10 @@ class PlayerSprite(AutoSprite):
     def get_rect(self):
         """Return the current rect to use."""
         return self.model.rect
+
+    def get_layer(self):
+        """Return the current layer."""
+        return not self.model.fixed
 
     def generate_jumping_dct(self, pid):
         """Genrerate animations with rotations and flipping."""

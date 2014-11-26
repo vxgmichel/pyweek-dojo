@@ -144,15 +144,17 @@ class RoomModel(BaseModel):
                 hit[i] = collide = True
         # New collision
         if collide and not self.colliding:
+            # Update score
+            for i,j in ((1,2), (2,1)):
+                if hit[i] and not hit[j]:
+                    self.score_dct[i] += 1
+            # Prepare callback
             def callback():
-                for i in (1,2):
-                    j = 2 if i==1 else 1
-                    if hit[i] and not hit[j]:
-                        self.score_dct[i] += 1
+                for i, j in ((1,2), (2,1)):
                     if hit[i]:
                         self.players[j].set_ko()
-                for player in self.players.values():
-                    player.speed *= (-self.damping,)*2
+                    self.players[i].speed *= (-self.damping,)*2
+            # Pause
             self.colliding = True
             self.parent.pause(1.0, callback)
             return True
