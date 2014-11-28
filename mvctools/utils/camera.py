@@ -26,7 +26,7 @@ class CameraModel(BaseModel):
     def is_camera_set(self):
         return not self.target_rect == self.base_rect
 
-    def update(self):
+    def post_update(self):
         # No speed
         if self.camera_speed is None:
             self.camera_rect = Rect(self.target_rect)

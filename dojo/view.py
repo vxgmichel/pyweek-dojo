@@ -303,6 +303,6 @@ class DojoView(CameraView):
 
     view_cls = StaticDojoView
     transparent = False
-    fixed_size = 320, 180
+    fixed_size = 640, 360
 
 
