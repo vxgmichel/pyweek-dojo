@@ -107,7 +107,7 @@ class RoomModel(BaseModel):
             self.parent.set_camera(area.clamp(self.rect))
             return new_zoom
 
-    def update(self):
+    def post_update(self):
         """Decompose players trajectory into steps."""
         maxi = max(len(self.players[pid].steps) for pid in (1,2)) - 1
         for i in range(maxi+1):
