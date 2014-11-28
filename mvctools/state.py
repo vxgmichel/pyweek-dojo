@@ -69,7 +69,8 @@ class BaseState(object):
         return 1.0 / self.current_fps
 
     def run(self):
-        self.current_fps = self.control.settings.fps
+        self.current_fps = float(self.control.settings.fps)
+        self.current_fps /= self.control.settings.debug_speed
         # Display fps
         if self.control.display_fps:
             string = self.control.window_title + "   FPS = {:3}"
@@ -91,7 +92,7 @@ class BaseState(object):
             millisec = clock.tick(tick)
             if millisec:
                 self.current_fps = 1000.0/millisec
-                self.current_fps /= float(self.control.settings.debug_speed)
+                self.current_fps /= self.control.settings.debug_speed
             rate = clock.get_fps()
             if rate and string:
                     caption = string.format(int(rate))

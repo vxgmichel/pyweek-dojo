@@ -75,7 +75,6 @@ class LineSprite(AutoSprite):
         return self.image.get_rect(**kwargs)
 
 
-
 @from_parent(["font_size", "font_name", "antialias", "color", "opacity"])
 class ChilrenLineSprite(LineSprite):
 
@@ -144,14 +143,14 @@ class TextView(BaseView):
             if previous:
                 return margin + previous.bottomleft
             return 0,0
+        max_width = max(child.rect.w for child in self.lines)
         # Centered aligment
-        if self.alignement == "center":
+        if self.alignment == "center":
             if previous:
                 return margin + previous.midbottom
-            max_width = max(child.rect.w for child in self.lines)
             return max_width/2, 0
         # Right aligment
-        elif self.alignment == "right":
+        if self.alignment == "right":
             if previous:
                 return margin + previous.bottomright
             return max_width, 0
@@ -166,7 +165,7 @@ class TextView(BaseView):
 
 
 @from_parent(["font_size", "font_name", "antialias", "color", "opacity",
-              "text", "bgd_color", "bgd_image", "margin"])
+              "text", "bgd_color", "bgd_image", "margin", "alignment"])
 class ChildrenTextView(TextView):
     pass
 
