@@ -106,7 +106,7 @@ class ControlSprite(WhiteTextSprite):
 
 
 def opacify_ip(surface, opacity):
-    if opacity < 1: 
+    if opacity < 1:
         color = 255, 255, 255, int(255 * opacity)
         surface.fill(color, special_flags=pg.BLEND_RGBA_MULT)
 
@@ -136,7 +136,7 @@ class AuraSprite(AutoSprite):
         attr = DIR_TO_ATTR[self.model.current_dir]
         center = getattr(self.model.rect, attr)
         return self.image.get_rect(center=center)
-            
+
     def generate_resource_dct(self):
         """Genrerate animations with rotations and flipping."""
         dct = {Dir.NONE: None}
@@ -182,19 +182,19 @@ class PlayerSprite(AutoSprite):
                          Dir.DOWN:  (False, False, 0),
                          Dir.LEFT:  (False, False, 3),
                          Dir.RIGHT: (True,  False, 1),}
-    
+
     perp_names = {1: "jumping/perp_player_1",
                   2: "jumping/perp_player_2",}
     diag_names = {1: "jumping/diag_player_1",
                   2: "jumping/diag_player_2",}
-    
+
     perp_dir = [Dir.UP, Dir.LEFT, Dir.DOWN, Dir.RIGHT]
     diag_dir = [Dir.UPRIGHT, Dir.UPLEFT, Dir.DOWNLEFT, Dir.DOWNRIGHT]
 
     def init(self):
         """Initialize the resources."""
         # Animation
-        self.layer = 10 
+        self.layer = 10
         timer = self.model.timer
         filename = self.player_dct[self.model.id]
         resource = self.resource.image.get(filename)
@@ -209,14 +209,19 @@ class PlayerSprite(AutoSprite):
 
     def get_image(self):
         """Return the current image to use."""
+        # KO
         if self.model.ko:
             return self.ko
+        # Blinking
+        if round(self.model.blinking_timer.get(normalized=True)):
+            return Surface((0,0))
+        # Fixed
         if self.model.fixed:
             arg = self.fixed_convert_dct[self.model.pos]
             arg += (self.model.loading,)
-            animation = self.resource_dct[arg]
-            return animation.get()
-        return self.jumping_dct.get(self.model.current_dir, self.image) 
+            return self.resource_dct[arg].get()
+        # Moving
+        return self.jumping_dct.get(self.model.current_dir, self.image)
 
     def get_rect(self):
         """Return the current rect to use."""
@@ -241,7 +246,7 @@ class PlayerSprite(AutoSprite):
         dct[self.diag_dir[1]] = transform.flip(dct[self.diag_dir[0]], 1, 0)
         dct[self.diag_dir[2]] = transform.flip(dct[self.diag_dir[3]], 1, 0)
         dct[self.perp_dir[1]] = transform.flip(dct[self.perp_dir[3]], 1, 0)
-        dct[self.perp_dir[2]] = transform.rotate(perp_image, 180) 
+        dct[self.perp_dir[2]] = transform.rotate(perp_image, 180)
         # Return
         return dct
 
@@ -256,14 +261,14 @@ class PlayerSprite(AutoSprite):
                     for l in range(2):
                         if l:
                             lst = [flash(image, i/2) for i, image in enumerate(lst)]
-                        dct[h,v,r,l] = self.build_animation(lst, timer=timer) 
+                        dct[h,v,r,l] = self.build_animation(lst, timer=timer)
         return dct
 
 
 # Rectangle sprite
 class RectSprite(AutoSprite):
     """Rect sprite for debug purposes"""
-    
+
     def get_rect(self):
         """Return the current rect to use."""
         return self.model.rect
@@ -284,10 +289,10 @@ class RectSprite(AutoSprite):
 # Dojo view
 class StaticDojoView(BaseView):
     """Dojo view without the camera move."""
-    
+
     bgd_image = "image/room"
     bgd_color = "darkgrey"
-    
+
     sprite_class_dct = {PlayerModel: PlayerSprite,
                         RoomModel: RoomSprite,
                         RectModel: RectSprite}

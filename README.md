@@ -32,7 +32,6 @@ and ceiling of the room to jump on your opponent.
 
  - Since it's a versus fighting game, you need to be two players.
  - The characters can't walk, run or hit. Only jump.
- - The control direction when the jump key is released fixes the jump direction
  - It is possible to jump higher by keeping the jump button pressed.
  - It is possible for a player to let himself down by pressing jump without direction.
  - The game switches to slow motion when players are close to hit each other. 

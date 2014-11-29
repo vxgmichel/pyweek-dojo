@@ -9,7 +9,7 @@ from dojo.common import Dir, closest_dir, generate_steps, perfect_collide
 # Dojo model
 class DojoModel(CameraModel):
     """Dojo model for the main game state."""
-    
+
     # Resource to get the model size
     ref = "room"
 
@@ -35,13 +35,23 @@ class DojoModel(CameraModel):
         # Forward actions
         return self.room.register(*args, **kwargs)
 
-     
+
 # Room model
 class RoomModel(BaseModel):
     """Dojo model for the main game state."""
 
     # Damping when two players collide
     damping = 0.8
+
+    # Pause when two players collide
+    pause_dct = {True: 1.0,
+                 False: 0.5,}
+
+    # Distance for slow motion
+    threshold = 16
+
+    # Speed ratio for slow motion
+    slow_ratio = 0.2
 
     # Title
     text = "Dojo"
@@ -57,7 +67,7 @@ class RoomModel(BaseModel):
     @property_from_gamedata("score_dct")
     def score_dct(self):
         return {i:0 for i in (1,2)}
-    
+
     def register_activate(self, player, down):
         """Register a jump from the controller."""
         player = self.players[player]
@@ -71,16 +81,12 @@ class RoomModel(BaseModel):
     def register_escape(self):
         """Register an escape from the controller."""
         return True
-            
+
     def register_dir(self, player, direction):
         """Register a direction change from the controller."""
         self.players[player].register_dir(direction)
 
     def update_speed(self):
-        # Settings
-        threshold = 16
-        slow = 0.2
-        camera_margin = 1.2
         # Get distance
         lst = [float("inf")]
         for i in (1,2):
@@ -93,11 +99,11 @@ class RoomModel(BaseModel):
             lst.append(abs(pos_1-pos_2))
             lst.append(abs(pos_1-pos_3))
         # Set speed
-        if min(lst) > float(threshold):
+        if min(lst) > float(self.threshold):
             if self.time_speed: self.time_speed = 1.0
             self.parent.reset_camera()
         else:
-            if self.time_speed: self.time_speed = slow
+            if self.time_speed: self.time_speed = self.slow_ratio
             new_zoom = not self.parent.is_camera_set
             area = self.players[1].rect.union(self.players[2].rect)
             center = area.center
@@ -144,19 +150,16 @@ class RoomModel(BaseModel):
                 hit[i] = collide = True
         # New collision
         if collide and not self.colliding:
-            # Update score
+            # Update
             for i,j in ((1,2), (2,1)):
                 if hit[i] and not hit[j]:
                     self.score_dct[i] += 1
-            # Prepare callback
-            def callback():
-                for i, j in ((1,2), (2,1)):
-                    if hit[i]:
-                        self.players[j].set_ko()
-                    self.players[i].speed *= (-self.damping,)*2
+                    self.players[j].blinking_timer.start()
             # Pause
             self.colliding = True
-            self.parent.pause(1.0, callback)
+            self.callback_data = hit
+            pause = self.pause_dct[any(hit.values())]
+            self.parent.pause(pause, self.callback)
             return True
         # Update flag
         elif not collide:
@@ -166,6 +169,14 @@ class RoomModel(BaseModel):
         """Test collision against the wall"""
         for pid in (1,2):
             self.players[pid].update_collision()
+
+    def callback(self):
+        hit = self.callback_data
+        for i, j in ((1,2), (2,1)):
+            if hit[i]:
+                self.players[j].set_ko()
+                self.players[j].blinking_timer.reset()
+            self.players[i].speed *= (-self.damping,)*2
 
 
 # Border modem
@@ -187,12 +198,12 @@ class RectModel(BaseModel):
         """Initialize from a parent attribute name and a color."""
         self.attr = attr
         self.color = color
-        
+
     @property
     def rect(self):
         """Rectangle property."""
         return getattr(self.parent, self.attr)
-    
+
 # Player model
 class PlayerModel(BaseModel):
     """Player model. Most of the gameplay is handled here."""
@@ -205,10 +216,11 @@ class PlayerModel(BaseModel):
     max_loading_speed = 1000 # pixel/s
 
     # Animation
-    period = 2.0         # s
-    pre_jump = 0.25      # s
-    load_factor_min = 5  # period-1
-    load_factor_max = 10 # period-1
+    period = 2.0          # s
+    pre_jump = 0.25       # s
+    load_factor_min = 5   # period-1
+    load_factor_max = 10  # period-1
+    blinking_period = 0.2 # s
 
     # Hitbox
     hitbox_ratio = 0.33
@@ -232,7 +244,7 @@ class PlayerModel(BaseModel):
 
     # Resource to get the player size
     ref = "player_1"
-    
+
     def init(self, pid):
         """Initialize the player."""
         # Attributes
@@ -266,6 +278,10 @@ class PlayerModel(BaseModel):
         self.delay_timer = Timer(self,
                                  stop=self.pre_jump,
                                  callback=self.delay_callback)
+        # Dying timer
+        self.blinking_timer = Timer(self.parent.parent,
+                                    stop=self.blinking_period,
+                                    periodic=True)
         # Debug
         if self.control.settings.display_hitbox:
             RectModel(self, "head", Color("red"))
@@ -289,7 +305,7 @@ class PlayerModel(BaseModel):
     @property
     def loading_speed(self):
         return self.loading_timer.get()
-    
+
     def set_ko(self):
         """Knock the player out."""
         self.ko = True
@@ -381,7 +397,7 @@ class PlayerModel(BaseModel):
         """Head hitbox."""
         if self.ko:
             return Rect(0,0,0,0)
-        if self.fixed:       
+        if self.fixed:
             return self.get_rect_from_dir(self.pos * (-1,-1))
         return self.get_rect_from_dir(self.current_dir * (-1,-1))
 
