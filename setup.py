@@ -8,7 +8,7 @@ def find_data_files(directory):
             for path, _, files in os.walk(directory)]
 
 setup(name = 'pyweek-dojo',
-      version = '1.1.1',
+      version = '1.2.0',
       description = 'A minimalistic versus fighting game',
       packages = find_packages(),
       data_files=find_data_files("resource"),
