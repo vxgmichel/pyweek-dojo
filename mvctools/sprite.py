@@ -21,6 +21,7 @@ class AutoSprite(DirtySprite):
             parent.register_child(self)
             self._layer = parent.layer
         # Group handling
+        self.dirty_rects = None
         self.group = parent.group
         self.group.add(self)
         # State
@@ -168,26 +169,22 @@ class ViewSprite(AutoSprite):
     def transform(self, screen, dirty):
         screen_size = screen.get_size()
         if screen_size == self.size:
-            return screen
-        scale_rects(dirty, screen_size, self.size)
+            return screen, dirty
+        if dirty:
+            dirty = scale_rects(dirty, screen_size, self.size)
         if all(screen.get_size()):
-            return self.resource.scale(screen, self.size)
-        return Surface(self.size, screen.get_flags())
+            image = self.resource.scale(screen, self.size)
+            return image, dirty
+        image = Surface(self.size, screen.get_flags())
+        return image, None
 
     def get_image(self):
         # Get screen
         screen, dirty = self.view._update()
         # Transform
-        image = self.transform(screen, dirty)
+        image, dirty = self.transform(screen, dirty)
         # Dirtyness
-        if dirty:
-            rect = dirty[0].unionall(dirty[1:])
-            self.source_rect = rect
-            self.dirty_rects = dirty
-            self.set_dirty()
-        else:
-            self.dirty_rects = None
-            self.source_rect = None
+        self.dirty_rects = dirty
         # Return
         return image
         

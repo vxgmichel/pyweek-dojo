@@ -105,6 +105,7 @@ def scale_rects(rects, source_size, dest_size):
         topleft = (ratio * rect.topleft).map(int)
         bottomright = (ratio * rect.bottomright).map(ceil)
         rect.topleft, rect.size = topleft, bottomright - topleft
+    return rects
 
 
 class cachedict(defaultdict):

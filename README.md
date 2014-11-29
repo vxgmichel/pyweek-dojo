@@ -73,7 +73,7 @@ in the main() function (`dojo/__init__.py`):
 ## MVC Tools
 
 The game is based on [pygame-mvctools](https://github.com/vxgmichel/pygame-mvctools),
-a library for writing games using the model-controller-view design pattern.
+a library for writing games using the model-view-controller design pattern.
 
 ## Repository
 

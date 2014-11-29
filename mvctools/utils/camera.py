@@ -13,6 +13,7 @@ class CameraModel(BaseModel):
         self.camera_rect = Rect(rect)
         self.target_rect = Rect(rect)
         self.camera_speed = speed
+        self.old_camera_rect = None
 
     def reset_camera(self, force=False):
         self.target_rect = self.base_rect
@@ -23,10 +24,16 @@ class CameraModel(BaseModel):
         self.target_rect = Rect(rect)
 
     @property
+    def camera_changed(self):
+        return self.camera_rect != self.old_camera_rect
+
+    @property
     def is_camera_set(self):
         return not self.target_rect == self.base_rect
 
     def post_update(self):
+        # Save current
+        self.old_camera_rect = self.camera_rect
         # No speed
         if self.camera_speed is None:
             self.camera_rect = Rect(self.target_rect)
@@ -61,7 +68,6 @@ class CameraSprite(ViewSprite):
 
     def init(self):
         ViewSprite.init(self)
-        self.next_skip = False
 
     @property
     def view_cls(self):
@@ -75,22 +81,18 @@ class CameraSprite(ViewSprite):
         return self.image.get_rect()
 
     def transform(self, screen, dirty):
+        # No update needed
+        if not dirty and not self.model.camera_changed:
+            return self.image, None
         # Crop the screen with the camera rectangle
         if self.model.camera_rect != screen.get_rect():
-            dirty[:] = []
-            self.next_skip = False
             cropped = Surface(self.model.camera_rect.size).convert_alpha()
             cropped.blit(screen, (0, 0), self.model.camera_rect)
-            return ViewSprite.transform(self, cropped, dirty)
-        # No update needed
-        elif not dirty and self.next_skip:
-            return self.image
+            return ViewSprite.transform(self, cropped, None)
         # Update needed
-        elif not self.next_skip:
-            dirty[:] = []
+        if self.model.camera_changed:
             self.set_dirty()
-        # Update
-        self.next_skip = True
+            dirty = None
         return ViewSprite.transform(self, screen, dirty)
         
 
