@@ -116,6 +116,8 @@ class TextView(BaseView):
 
     def update(self):
         self.update_lines()
+        self.max_width = max(child.get_image().get_width()
+                             for child in self.lines)
 
     def get_child_text(self, lid):
         try: return self.text.splitlines()[lid]
@@ -143,17 +145,16 @@ class TextView(BaseView):
             if previous:
                 return margin + previous.bottomleft
             return 0,0
-        max_width = max(child.rect.w for child in self.lines)
         # Centered aligment
         if self.alignment == "center":
             if previous:
                 return margin + previous.midbottom
-            return max_width/2, 0
+            return self.max_width/2, 0
         # Right aligment
         if self.alignment == "right":
             if previous:
                 return margin + previous.bottomright
-            return max_width, 0
+            return self.max_width, 0
 
     @property
     def fixed_size(self):

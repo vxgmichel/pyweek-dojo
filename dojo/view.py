@@ -209,12 +209,12 @@ class PlayerSprite(AutoSprite):
 
     def get_image(self):
         """Return the current image to use."""
+        # Blinking
+        value = self.model.blinking_timer.get(normalized=True)
+        self.visible = not round(value)
         # KO
         if self.model.ko:
             return self.ko
-        # Blinking
-        if round(self.model.blinking_timer.get(normalized=True)):
-            return Surface((0,0))
         # Fixed
         if self.model.fixed:
             arg = self.fixed_convert_dct[self.model.pos]
