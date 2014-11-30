@@ -4,14 +4,20 @@ from mvctools.common import xytuple, Color
 class BaseSettings(object):
     def __init__(self, control):
         self.control = control
+        # Directories
         self.font_dir = "font"
+        self.image_dir = "image"
+        self.sound_dir = "sound"
+        # Debug
         self.debug_speed = 1.0
-        self.display_hitbox = False
+        self.debug_mode = False
+        self.display_fps = False
+        self.profile = False
+        # Settings
         self._fps = 60
         self._width = 1280
         self._height = 720
         self._fullscreen = False
-        self._native_ratio = None
 
     @property
     def width(self):
@@ -32,7 +38,6 @@ class BaseSettings(object):
             value = map(int, value)
         if any(self.size-value):
             self._width, self._height = value
-            self.apply()
 
     @property
     def fps(self):
@@ -42,9 +47,7 @@ class BaseSettings(object):
     def fps(self, value):
         if isinstance(value, basestring):
             value = int(value)
-        if value != self.fps:
-            self._fps = value
-            self.apply()
+        self._fps = value
 
     @property
     def fullscreen(self):
@@ -61,23 +64,9 @@ class BaseSettings(object):
             raise ValueError
         if value != self.fullscreen:
             self._fullscreen = value
-            self.apply()
 
     # Fullscreen alias
     mode = fullscreen
-
-    @property
-    def native_ratio(self):
-        return self._native_ratio
-
-    @native_ratio.setter
-    def native_ratio(self, value):
-        if isinstance(value, tuple):
-            w, h = value
-            value = float(w)/h
-        if value != self.native_ratio:
-            self._native_ratio = value
-            self.apply()
 
     def string_setting(self, name, default=None):
         if name in ["size"]:
@@ -91,9 +80,3 @@ class BaseSettings(object):
         if name in ["height"]:
             return str(self.height)
         return default
-
-    def apply(self):
-        if pygame.display.get_surface():
-            self.set_mode()
-            self.control.reload()
-

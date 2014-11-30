@@ -61,8 +61,8 @@ class CameraModel(BaseModel):
             dct[attr] = round(dct[attr])
         size = dct["right"] - dct["left"], dct["bottom"] - dct["top"]
         topleft = dct["left"], dct["top"]
-        self.camera_rect = Rect(topleft, size)        
-        
+        self.camera_rect = Rect(topleft, size)
+
 
 class CameraSprite(ViewSprite):
 
@@ -94,7 +94,7 @@ class CameraSprite(ViewSprite):
             self.set_dirty()
             dirty = None
         return ViewSprite.transform(self, screen, dirty)
-        
+
 
 class CameraView(BaseView):
 
@@ -104,4 +104,4 @@ class CameraView(BaseView):
         self.camera = CameraSprite(self)
 
 
-    
+

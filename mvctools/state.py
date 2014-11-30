@@ -20,14 +20,14 @@ class TickContext(object):
         self.state.ticking = False
         if error is NextStateException:
             return True
-            
+
 
 class BaseState(object):
     model_class = BaseModel
     controller_class = BaseController
     view_class = BaseView
     clock_class = pygame.time.Clock
-    
+
     def __init__(self, control):
         self.control = control
         self.model = self.model_class(self)
@@ -69,40 +69,40 @@ class BaseState(object):
         return 1.0 / self.current_fps
 
     def run(self):
+        # Set current FPS
         self.current_fps = float(self.control.settings.fps)
-        self.current_fps /= self.control.settings.debug_speed
-        # Display fps
-        if self.control.display_fps:
+        # Display FPS
+        string = None
+        if self.control.settings.display_fps:
             string = self.control.window_title + "   FPS = {:3}"
-        else:
-            string = None
-        # Freeze current fps for the first tick
+        # Freeze current fps for the first two ticks
+        if self.tick():
+            return
+        # Profile
+        if self.control.settings.profile:
+            import cProfile, pstats
+            profiler = cProfile.Profile()
+            profiler.enable()
+        # Reset clock
         clock = self.clock_class()
-        if self.tick(): return
-        # PROFILE
-##        import cProfile, pstats, StringIO
-##        pr = cProfile.Profile()
-##        pr.enable()
-        # END PROFILE
-        clock.tick()
         # Loop over the state ticks
         while not self.tick():
+            # Time control
             tick = self.control.settings.fps
             tick *= self.control.settings.debug_speed
             millisec = clock.tick(tick)
+            # Update current FPS
             if millisec:
                 self.current_fps = 1000.0/millisec
                 self.current_fps /= self.control.settings.debug_speed
+            # Update window caption
             rate = clock.get_fps()
             if rate and string:
                     caption = string.format(int(rate))
                     pygame.display.set_caption(caption)
-        # PROFILE
-##        pr.disable()
-##        s = StringIO.StringIO()
-##        sortby = 'tottime'
-##        ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
-##        ps.print_stats()
-##        print s.getvalue()
-        # END PROFILE        
-        
+        # Profile
+        if self.control.settings.profile:
+            profiler.disable()
+            ps = pstats.Stats(profiler).sort_stats('tottime')
+            ps.print_stats()
+

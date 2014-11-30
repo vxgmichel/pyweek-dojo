@@ -24,7 +24,6 @@ class DojoState(BaseState):
 class Dojo(BaseControl):
     """Dojo game main class."""
 
-    display_fps = False
     window_title = "Dojo"
     first_state = DojoState
     resource_dir = relative("resource")
@@ -37,10 +36,14 @@ class Dojo(BaseControl):
 # Main function
 def main():
     dojo = Dojo()
-    dojo.display_fps = False
+    # Settings
     dojo.settings.fps = 60
     dojo.settings.size = 1280, 720
     dojo.settings.fullscreen = False
+    # Debug
+    dojo.settings.display_fps = False
+    dojo.settings.profile = False
     dojo.settings.debug_speed = 1
-    dojo.settings.display_hitbox = False
+    dojo.settings.debug_mode = False
+    # Run
     dojo.run()

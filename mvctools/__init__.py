@@ -6,7 +6,7 @@ classes are provided. Other high level features are available, like the
 resource handler and automatically updated sprite.
 """
 
-from mvctools.common import xytuple, cursoredlist, cachedict
+from mvctools.common import Dir, xytuple, cursoredlist
 from mvctools.control import BaseControl
 from mvctools.state import BaseState, NextStateException
 from mvctools.controller import BaseController, MouseController

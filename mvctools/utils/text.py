@@ -1,26 +1,14 @@
 import pygame as pg
 from mvctools.sprite import AutoSprite
-from mvctools.common import cache, xytuple
+from mvctools.common import cache, xytuple, from_parent
 from mvctools.sprite import ViewSprite
-from mvctools import BaseView
+from mvctools.view import BaseView
 from pygame import Color, Rect
 
-def from_parent(lst):
-    # Getter generator
-    gen_getter = lambda attr: lambda self: getattr(self.parent, attr)
-    # Decorator
-    def decorator(cls):
-        # Loop over attributes
-        for attr in lst:
-            # Set property
-            setattr(cls, attr, property(gen_getter(attr)))
-        return cls
-    # Return
-    return decorator
 
 def opacify(source, opacity):
     surface = source.convert_alpha()
-    if opacity < 1: 
+    if opacity < 1:
         color = 255, 255, 255, int(255 * opacity)
         surface.fill(color, special_flags=pg.BLEND_RGBA_MULT)
     return surface
@@ -36,7 +24,7 @@ def render(font, text, antialias, color, background):
 
 class LineSprite(AutoSprite):
 
-    # Font 
+    # Font
     font_size = 0
     font_name = ""
     # Renderer
@@ -94,8 +82,8 @@ class ChilrenLineSprite(LineSprite):
         self.id = lid
 
 class TextView(BaseView):
-    
-    # Font 
+
+    # Font
     font_size = 0
     font_name = ""
     # Renderer
@@ -136,7 +124,7 @@ class TextView(BaseView):
             self.lines.append(ChilrenLineSprite(self, i))
         for i in range(len(self.lines), nb_lines, -1):
             self.lines.kill()
-            
+
     def get_child_pos(self, lid):
         previous = self.lines[lid-1] if lid else None
         margin = xytuple(0, self.margin)
@@ -172,7 +160,7 @@ class ChildrenTextView(TextView):
 
 class TextSprite(ViewSprite):
 
-    # Font 
+    # Font
     font_size = 0
     font_name = ""
     # Renderer
@@ -186,7 +174,7 @@ class TextSprite(ViewSprite):
     reference = "center"
     alignment = "left"
     # Margin
-    margin = 0 
+    margin = 0
     # Background
     bgd_color = None
     bgd_image = None

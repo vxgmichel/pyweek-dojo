@@ -32,8 +32,6 @@ class BaseControl(object):
        (default is "resource")
      - **window_title** : title of the window
        (default is "Pygame")
-     - **display_fps** : display the fps rate in the window title
-       (default is True)
 
     This method may also be useful to override:
      - **pre_run** : code to run after the video mode is set and before the
@@ -74,7 +72,6 @@ class BaseControl(object):
     first_state = None
     resource_dir = "resource"
     window_title = "Pygame"
-    display_fps = True
     
     def __init__(self):
         """Initialize the state control."""

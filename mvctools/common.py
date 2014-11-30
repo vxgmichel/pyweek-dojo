@@ -1,5 +1,6 @@
 """Module with useful classes and functions."""
 
+# Imports
 import operator
 from math import ceil
 from functools import wraps
@@ -7,6 +8,7 @@ from collections import namedtuple, defaultdict
 from pygame import Color
 
 
+# XY namedtuple
 class xytuple(namedtuple("xytuple",("x","y"))):
     """Tuple for x,y coordinates and their transformations.
 
@@ -26,7 +28,7 @@ class xytuple(namedtuple("xytuple",("x","y"))):
     To apply a specific function on both coordinates, use the method map.
     It returns an xytuple.
     """
-    
+
     __add__ = __iadd__ = lambda self, it: xytuple(*map(operator.add, self, it))
     __add__.__doc__ = """Add a 2-elements iterable and return an xytuple.
                       """
@@ -51,6 +53,20 @@ class xytuple(namedtuple("xytuple",("x","y"))):
         return xytuple(*map(func, self))
 
 
+# Direction enumeration
+class Dir:
+    NONE = xytuple(0,0)
+    UP = xytuple(0,-1)
+    DOWN = xytuple(0,+1)
+    LEFT = xytuple(-1,0)
+    RIGHT = xytuple(+1,0)
+    UPLEFT = UP + LEFT
+    UPRIGHT = UP + RIGHT
+    DOWNLEFT = DOWN + LEFT
+    DOWNRIGHT = DOWN + RIGHT
+
+
+# Cursored list
 class cursoredlist(list):
     """Enhanced list with a cursor attribute
 
@@ -58,7 +74,7 @@ class cursoredlist(list):
         iterator (any iterable): Iterator to build the list from
         pos (int): Initial cursor value (default is 0)
     """
-    
+
     def __init__(self, iterator, cursor=0):
         """Inititalize the cursor."""
         list.__init__(self, iterator)
@@ -72,7 +88,7 @@ class cursoredlist(list):
             return self[self.cursor]
         except IndexError:
             return default
-        
+
     def inc(self, inc):
         """Increment the cursor and return the new current object.
 
@@ -97,6 +113,7 @@ class cursoredlist(list):
             self.cursor = index % len(self)
 
 
+# Scale rectangles function
 def scale_rects(rects, source_size, dest_size):
     if not all(source_size):
         return
@@ -108,6 +125,7 @@ def scale_rects(rects, source_size, dest_size):
     return rects
 
 
+# Cache dictionary
 class cachedict(defaultdict):
 
     def __missing__(self, key):
@@ -118,6 +136,7 @@ class cachedict(defaultdict):
         return self[key]
 
 
+# Cache decorator
 def cache(func, static=False):
     dct = {}
     @wraps(func)
@@ -127,7 +146,24 @@ def cache(func, static=False):
         return dct[args]
     return wrapper
 
+
+# From parent decorator
+def from_parent(lst):
+    # Getter generator
+    gen_getter = lambda attr: lambda self: getattr(self.parent, attr)
+    # Decorator
+    def decorator(cls):
+        # Loop over attributes
+        for attr in lst:
+            # Set property
+            setattr(cls, attr, property(gen_getter(attr)))
+        return cls
+    # Return
+    return decorator
+
+
+# Color class
 class Color(Color):
     """TODO: Enhanced version of pygame.Color."""
     pass
-        
+

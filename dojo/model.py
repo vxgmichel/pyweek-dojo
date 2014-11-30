@@ -73,7 +73,7 @@ class RoomModel(BaseModel):
         player = self.players[player]
         player.load() if down else player.jump()
 
-    def register_reset(self):
+    def register_start(self):
         """Register a reset from the controller."""
         self.control.register_next_state(type(self.state))
         return True
@@ -283,7 +283,7 @@ class PlayerModel(BaseModel):
                                     stop=self.blinking_period,
                                     periodic=True)
         # Debug
-        if self.control.settings.display_hitbox:
+        if self.control.settings.debug_mode:
             RectModel(self, "head", Color("red"))
             RectModel(self, "body", Color("green"))
             RectModel(self, "legs", Color("blue"))

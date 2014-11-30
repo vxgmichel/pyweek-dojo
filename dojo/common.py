@@ -1,18 +1,5 @@
-from mvctools import xytuple
+from mvctools import xytuple, Dir
 from pygame import PixelArray, Surface, BLEND_RGBA_MIN
-
-
-class Dir:
-    NONE = xytuple(0,0)
-    UP = xytuple(0,-1)
-    DOWN = xytuple(0,+1)
-    LEFT = xytuple(-1,0)
-    RIGHT = xytuple(+1,0)
-    UPLEFT = UP + LEFT
-    UPRIGHT = UP + RIGHT
-    DOWNLEFT = DOWN + LEFT
-    DOWNRIGHT = DOWN + RIGHT
-
 
 DIR_TO_ATTR = {Dir.NONE: "center",
                Dir.UP: "midtop",
@@ -67,7 +54,7 @@ def perfect_collide(rect1, img1, pos1, rect2, img2, pos2):
     surf = Surface(rect.size).convert_alpha()
     surf.blit(img1, (0,0), area=rect.move(-pos1),
               special_flags=BLEND_RGBA_MIN)
-    surf.blit(img2, (0,0), area=rect.move(-pos2), 
+    surf.blit(img2, (0,0), area=rect.move(-pos2),
               special_flags=BLEND_RGBA_MIN)
     return any(flatten(PixelArray(surf)))
 

@@ -1,13 +1,18 @@
 """Contain the view for the main game state."""
 
 # Imports
-import pygame as pg
 from collections import defaultdict
+
+# Pygame imports
+import pygame as pg
 from pygame import Rect, Surface, transform, draw, Color
+
+# MVC tools imports
 from mvctools import BaseView, AutoSprite, xytuple
 from mvctools.utils import TextSprite
-from mvctools.utils.renderer import opacify
-from mvctools.utils.camera import CameraView
+from mvctools.utils import CameraView
+
+# Dojo imports
 from dojo.model import PlayerModel, RectModel, RoomModel
 from dojo.common import Dir, DIR_TO_ATTR
 
