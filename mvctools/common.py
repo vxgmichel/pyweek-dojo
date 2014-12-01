@@ -29,6 +29,11 @@ class xytuple(namedtuple("xytuple",("x","y"))):
     It returns an xytuple.
     """
 
+    def __new__(cls, x, y=None):
+        """Create a new xytuple."""
+        if y is None: x, y = x
+        return super(xytuple, cls).__new__(cls, x, y)
+
     __add__ = __iadd__ = lambda self, it: xytuple(*map(operator.add, self, it))
     __add__.__doc__ = """Add a 2-elements iterable and return an xytuple.
                       """

@@ -1,82 +1,92 @@
+"""Provide the base settings class."""
+
+# Imports
 import pygame
-from mvctools.common import xytuple, Color
+from mvctools import xytuple
+from mvctools.property import setting, default_setting
 
+# Fullscreen string conversion functions
+
+def fullscreen_to_string(value):
+    """Convert a boolean to a string."""
+    return {True: 'windowed', False: 'fullscreen'}[value]
+
+def fullscreen_from_string(string):
+    """Convert a string to a boolean."""
+    if string.lower() in ["fullscreen", "full", "1", "true"]:
+        return True
+    if string.lower() in ["window", "windowed", "0", "false"]:
+        return False
+    raise ValueError("not a valid string")
+
+
+# Base settings class
 class BaseSettings(object):
+    """Base setting class"""
+
     def __init__(self, control):
+        """Save the control."""
         self.control = control
-        # Directories
-        self.font_dir = "font"
-        self.image_dir = "image"
-        self.sound_dir = "sound"
-        # Debug
-        self.debug_speed = 1.0
-        self.debug_mode = False
-        self.display_fps = False
-        self.profile = False
-        # Settings
-        self._fps = 60
-        self._width = 1280
-        self._height = 720
-        self._fullscreen = False
 
-    @property
+    # Directories
+
+    @default_setting(cast=str)
+    def font_dir(self):
+        return "font"
+
+    @default_setting(cast=str)
+    def image_dir(self):
+        return "image"
+
+    @default_setting(cast=str)
+    def sound_dir(self):
+        return "sound"
+
+    # Debug
+
+    @default_setting(cast=float)
+    def debug_speed(self):
+        return 1.0
+
+    @default_setting(cast=bool)
+    def debug_mode(self):
+        return False
+
+    @default_setting(cast=bool)
+    def profile(self):
+        return False
+
+    # Settings
+
+    @default_setting(cast=int)
+    def fps(self):
+        return 60
+
+    @default_setting(cast=int)
     def width(self):
-        return self._width
+        return 1280
 
-    @property
+    @default_setting(cast=int)
     def height(self):
-        return self._height
+        return 720
 
-    @property
+    @default_setting(cast=bool, from_string=fullscreen_from_string,
+                     to_string=fullscreen_to_string)
+    def fullscreen(self):
+        return False
+
+    #: Alias of fullscreen
+    mode = fullscreen
+
+    @setting(from_string="x".split, to_string="{0[0]}x{0[1]}".format)
     def size(self):
         return xytuple(self._width, self._height)
 
     @size.setter
     def size(self, value):
-        if isinstance(value, basestring):
-            value = value.lower().split('x')
-            value = map(int, value)
-        if any(self.size-value):
-            self._width, self._height = value
+        self.width, self.height = value
 
-    @property
-    def fps(self):
-        return self._fps
+    # Setting to string
 
-    @fps.setter
-    def fps(self, value):
-        if isinstance(value, basestring):
-            value = int(value)
-        self._fps = value
-
-    @property
-    def fullscreen(self):
-        return self._fullscreen
-
-    @fullscreen.setter
-    def fullscreen(self, value):
-        if isinstance(value, basestring):
-            if value.lower().startswith('full'):
-                value = True
-            elif value.lower().startswith('window'):
-                value = False
-        if not isinstance(value, bool):
-            raise ValueError
-        if value != self.fullscreen:
-            self._fullscreen = value
-
-    # Fullscreen alias
-    mode = fullscreen
-
-    def string_setting(self, name, default=None):
-        if name in ["size"]:
-            return "x".join(map(str, self.size))
-        if name in ["fullscreen", "mode"]:
-            return {True: "fullscreen", False: "windowed"}.get(self.mode)
-        if name in ["fps"]:
-            return str(self.fps)
-        if name in ["width"]:
-            return str(self.width)
-        if name in ["height"]:
-            return str(self.height)
-        return default
+    def setting_to_string(self, name):
+        return getattr(type(self), name).to_string(self)

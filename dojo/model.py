@@ -2,7 +2,7 @@
 
 # Imports
 from pygame import Rect, Color
-from mvctools import BaseModel, xytuple, Timer, property_from_gamedata
+from mvctools import BaseModel, xytuple, Timer, from_gamedata
 from mvctools.utils.camera import CameraModel
 from dojo.common import Dir, closest_dir, generate_steps, perfect_collide
 
@@ -64,7 +64,7 @@ class RoomModel(BaseModel):
         self.players = {i:PlayerModel(self, i) for i in (1,2)}
         self.colliding = False
 
-    @property_from_gamedata("score_dct")
+    @from_gamedata
     def score_dct(self):
         return {i:0 for i in (1,2)}
 
