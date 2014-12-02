@@ -312,7 +312,7 @@ class DojoView(CameraView):
     """Dojo view for the game state."""
 
     view_cls = StaticDojoView
-    #bgd_color = "darkgrey"
+    transparent = False
     fixed_size = 640, 360
 
 

@@ -69,9 +69,6 @@ class BaseView(object):
         return self.build_background(image, self.bgd_color, self.size,
                                      self.transparent)
 
-    def _reload(self):
-        self.__init__(self, self.model)
-
     def _update(self):
         # Create screen
         self.update_screen()
@@ -151,125 +148,176 @@ class BaseView(object):
 
 
 class PatchedLayeredDirty(LayeredDirty):
+    """A refactored version of LayeredDirty.
 
-    def add_internal(self, sprite, layer=None):
-        LayeredDirty.add_internal(self, sprite, layer)
-        self.spritedict[sprite] = []
+    The main difference is that the group can now handle
+    a new sprite attribute called **dirty_rects**.
+    When **dirty_rects** is not None and the sprite hasn't
+    moved, the group will only draw these rectangles.
+    This allow sprites to use group in order to chain screens
+    while avoiding performance issue.
+    """
 
-    def remove_internal(self, sprite):
-        self._spritelist.remove(sprite)
-        self.lostsprites.extend(self.spritedict[sprite])
-        del self.spritedict[sprite]
-        del self._spritelayers[sprite]
+    @staticmethod
+    def _update_rect_list(rect, lst, clip):
+        """Append a rectangle to a list using union and clip."""
+        i = rect.collidelist(lst)
+        while -1 < i:
+            rect.union_ip(lst[i])
+            del lst[i]
+            i = rect.collidelist(lst)
+        lst.append(rect.clip(clip))
+
+    def _prepare_sprites(self):
+        """Prepare the sprites before drawing.
+
+        Return the corresponding rectangle list.
+        """
+        return dict((sprite, self._prepare_sprite(sprite))
+                    for sprite in self._spritelist)
+
+    def _prepare_sprite(self, sprite):
+        """Prepare a sprite before drawing. and
+
+        Return the corresponding rectangle.
+        """
+        # Aliases
+        sprites = self._spritelist
+        old_rect_dct = self.spritedict
+        use_update = self._use_update
+        # Test dirty rects
+        try: sprite.dirty_rects
+        except AttributeError: sprite.dirty_rects = None
+        # Update dirtyness
+        if not sprite.dirty and sprite.dirty_rects:
+            sprite.dirty = 1
+        # Get actual size
+        try: size_rect = Rect((0,0), sprite.source_rect.size)
+        except AttributeError: size_rect = Rect((0,0), sprite.rect.size)
+        # Update structures
+        new_rect = size_rect.move(sprite.rect.topleft)
+        has_moved = new_rect != old_rect_dct[sprite]
+        # Whole rect is dirty
+        if not use_update or has_moved or sprite.dirty_rects is None:
+            sprite.dirty_rects = [size_rect]
+            return new_rect
+        # Clip the dirty rects
+        for k, area in enumerate(sprite.dirty_rects):
+            sprite.dirty_rects[k] = area.clip(size_rect)
+        # Return
+        return new_rect
+
+    def _get_dirty_rects(self, new_rect_dct, clip):
+        """Return the list of the rectangle to draw.
+
+        It uses the new rectangle dictionary and a clip.
+        """
+        # Full update case
+        if not self._use_update:
+            return [Rect(clip)]
+        rect_lst = self.lostsprites
+        # Loop over sprites
+        for sprite in self._spritelist:
+            new_rect = new_rect_dct[sprite]
+            self._update_list_from_sprite(sprite, new_rect, rect_lst, clip)
+        # Return
+        return rect_lst
+
+    def _update_list_from_sprite(self, sprite, new_rect, rect_lst, clip):
+        """Update a directly rectangle list from a sprite.
+
+        It uses the corresponding rectangle and a clip.
+        """
+        # New dirty rectangles
+        if sprite.dirty > 0 and sprite.visible:
+            for area in sprite.dirty_rects:
+                rect = area.move(sprite.rect.topleft)
+                self._update_rect_list(rect, rect_lst, clip)
+        # Old rectangle
+        if sprite.dirty > 0:
+            old_rect = Rect(self.spritedict[sprite])
+            has_changed = old_rect and old_rect != new_rect
+            if has_changed or not sprite.visible:
+                self._update_rect_list(old_rect, rect_lst, clip)
+
+    def _clear_surface(self, rect_lst, surface, bgd=None):
+        """Clear a surface using a background and a dirty rectangle list."""
+        for rect in rect_lst:
+            surface.fill(0, rect)
+            if bgd is not None:
+                surface.blit(bgd, rect, rect)
+
+    def _draw_sprites(self, surface, update_rect, new_rect_dct):
+        """Draw the sprites on a given surface.
+
+        It takes a dirty rect list and the rectangle dictionary.
+        """
+        # Loop over sprites
+        for sprite in self._spritelist:
+            new_rect = new_rect_dct[sprite]
+            self._draw_sprite(surface, sprite, new_rect, update_rect)
+
+    def _draw_sprite(self, surface, sprite, new_rect, rect_lst):
+        """Draw a sprite on a given surface.
+
+        It takes the corresponding rectangle and a dirty rect list.
+        """
+        # Aliases
+        old_rect_dct = self.spritedict
+        use_update = self._use_update
+        # Intersection
+        if use_update and 1 > sprite.dirty and sprite.visible:
+            for idx in new_rect.collidelistall(rect_lst):
+                rect_clip = new_rect.clip(rect_lst[idx])
+                area = rect_clip.move((-new_rect[0], -new_rect[1]))
+                surface.blit(sprite.image, rect_clip, area, sprite.blendmode)
+        # Dirty sprite
+        elif sprite.visible:
+            for area in sprite.dirty_rects:
+                dest = sprite.rect.move(area.topleft)
+                if sprite.source_rect:
+                    area.move_ip(sprite.source_rect.topleft)
+                surface.blit(sprite.image, dest, area, sprite.blendmode)
+        # Reset
+        sprite.dirty = 0 if sprite.dirty < 2 else 2
+        sprite.dirty_rects = None
 
     def draw(self, surface, bgd=None):
-        # speedups
-        _orig_clip = surface.get_clip()
-        _clip = self._clip
-        if _clip is None:
-            _clip = _orig_clip
-        _surf = surface
-        _sprites = self._spritelist
-        _old_rects = self.spritedict
-        _update = self.lostsprites
-        _update_append = _update.append
-        _ret = None
-        _surf_blit = _surf.blit
-        _surf_fill = _surf.fill
-        _rect = Rect
+        """Draw the group on a given surface using an optional background."""
+        # Clip
+        save_clip = surface.get_clip()
+        clip = save_clip if self._clip is None else self._clip
+        surface.set_clip(clip)
+        # Background
         if bgd is not None:
             self._bgd = bgd
-        _bgd = self._bgd
-        _surf.set_clip(_clip)
-        # 0. Prepare sprites
-        for spr in _sprites:
-            if not spr.dirty and spr.dirty_rects:
-                spr.dirty = 1
-            if spr.source_rect is None:
-                actual_size = spr.rect.size
-            else:
-                actual_size = spr.source_rect.size
-            actual_rect = _rect((0,0), actual_size)
-            if spr.dirty_rects is None:
-                spr.dirty_rects = [actual_rect]
-            # Loop over dirty rects
-            for k, area in enumerate(spr.dirty_rects):
-                _union_rect = spr.dirty_rects[k] = area.clip(actual_rect)
-        # 1. find dirty area on screen and put the rects into _update
+        bgd = self._bgd
+        # Prepare sprites
+        new_rect_dct = self._prepare_sprites()
+        # Time reference
         start_time = pg.time.get_ticks()
-        if self._use_update:
-            for spr in _sprites:
-                if 0 < spr.dirty:
-                    for area in spr.dirty_rects:
-                        _union_rect = area.move(spr.rect.topleft)
-                        _union_rect_collidelist = _union_rect.collidelist
-                        _union_rect_union_ip = _union_rect.union_ip
-                        i = _union_rect_collidelist(_update)
-                        while -1 < i:
-                            _union_rect_union_ip(_update[i])
-                            del _update[i]
-                            i = _union_rect_collidelist(_update)
-                        _update_append(_union_rect.clip(_clip))
-                        # Update old rects
-                        for old_rect in _old_rects[spr]:
-                            _union_rect = _rect(old_rect)
-                            _union_rect_collidelist = _union_rect.collidelist
-                            _union_rect_union_ip = _union_rect.union_ip
-                            i = _union_rect_collidelist(_update)
-                            while -1 < i:
-                                _union_rect_union_ip(_update[i])
-                                del _update[i]
-                                i = _union_rect_collidelist(_update)
-                            _update_append(_union_rect.clip(_clip))
-        else:
-            _update[:] = [_rect(_clip)]
-        # 2. clear using background
-        for rec in _update:
-            if _bgd is not None:
-                _surf_blit(_bgd, rec, rec)
-            else:
-                pass#_surf_fill(0, rec)
-        # 3. draw
-        for spr in _sprites:
-            if self._use_update and 1 > spr.dirty and spr._visible:
-                # sprite not dirty; blit only the intersecting part
-                _spr_rect = spr.rect
-                if spr.source_rect is not None:
-                    _spr_rect = Rect(spr.rect.topleft,
-                                     spr.source_rect.size)
-                _spr_rect_clip = _spr_rect.clip
-                for idx in _spr_rect.collidelistall(_update):
-                    # clip
-                    clip = _spr_rect_clip(_update[idx])
-                    _surf_blit(spr.image,
-                               clip,
-                               (clip[0] - _spr_rect[0],
-                                clip[1] - _spr_rect[1],
-                                clip[2],
-                                clip[3]),
-                               spr.blendmode)
-            # dirty sprite
-            elif spr._visible:
-                _old_rects[spr] = []
-                for area in spr.dirty_rects:
-                    if spr.source_rect:
-                        area.move_ip(spr.source_rect.topleft)
-                    _old_rects[spr].append(_surf_blit(spr.image,
-                                                      spr.rect.move(area.topleft),
-                                                      area,
-                                                      spr.blendmode))
-            _ret = list(_update)
-        # 4. Reset
-        _update[:] = []
-        _surf.set_clip(_orig_clip)
-        for spr in _sprites:
-            spr.dirty = 0 if spr.dirty < 2 else 2
-            spr.dirty_rects = None
-        # 5. Timing update
+        # Find dirty rectangles on screen
+        dirty_rects = self._get_dirty_rects(new_rect_dct, clip)
+        # Clear the surface
+        self._clear_surface(dirty_rects, surface, bgd)
+        # Draw on the surface
+        self._draw_sprites(surface, dirty_rects, new_rect_dct)
+        # Reset
+        self.lostsprites = []
+        self.spritedict = new_rect_dct
+        surface.set_clip(save_clip)
+        # Timing update
         delta = pg.time.get_ticks() - start_time
         self._use_update = delta < self._time_threshold
-        # 6. Return filtered rectangles
-        return filter(bool, _ret)
+        # Return filtered rectangles
+        return filter(bool, dirty_rects)
+
+    def set_clip(self, screen_rect=None):
+        """ Clip the area where to draw."""
+        if self._clip != screen_rect:
+            self._use_update = False
+        self._clip = screen_rect
+
 
 
 # Autogroup class

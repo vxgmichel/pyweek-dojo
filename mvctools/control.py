@@ -100,13 +100,8 @@ class BaseControl(object):
             self.current_state = None
         return self.current_state
 
-    def reload(self):
-        """Reload current state."""
-        if self.current_state:
-            self.current_state.reload()
-
-    def full_reload(self):
-        """Fully reload current state if it is active."""
+    def reload_state(self):
+        """Fully reload the current state."""
         if self.current_state and self.current_state.ticking:
             self.push_current_state()
             raise NextStateException

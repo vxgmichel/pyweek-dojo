@@ -158,12 +158,30 @@ class AutoSprite(DirtySprite):
     def rect(self):
         del self._rect
 
+    # Visible property
+
+    @property
+    def visible(self):
+        return self._visible
+
+    @visible.setter
+    def visible(self, visible):
+        visible = bool(visible)
+        if self.visible != visible:
+            self._visible = visible
+            self.set_dirty()
+
+    @visible.deleter
+    def visible(self):
+        del self._visible
+
 class ViewSprite(AutoSprite):
 
     view_cls = BaseView
     
-    def init(self):
-        self.view = None
+    def init(self, view_cls=None):
+        if view_cls:
+            self.view_cls = view_cls
         self.view = self.view_cls(self, self.model)
 
     def transform(self, screen, dirty):

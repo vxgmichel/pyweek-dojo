@@ -59,11 +59,6 @@ class BaseState(object):
     def get_surface(self):
         return pygame.display.get_surface()
 
-    def reload(self):
-        self.controller._reload()
-        self.model._reload()
-        self.view._reload()
-
     @property
     def delta(self):
         return 1.0 / self.current_fps
@@ -75,21 +70,24 @@ class BaseState(object):
         string = None
         if self.control.settings.display_fps:
             string = self.control.window_title + "   FPS = {:3}"
+        # Create clock
+        clock = self.clock_class()
         # Freeze current fps for the first two ticks
         if self.tick():
             return
+        # Time control
+        tick = self.control.settings.fps
+        tick *= self.control.settings.debug_speed
+        millisec = clock.tick(tick)
         # Profile
         if self.control.settings.profile:
             import cProfile, pstats
             profiler = cProfile.Profile()
             profiler.enable()
-        # Reset clock
-        clock = self.clock_class()
+            clock.tick()
         # Loop over the state ticks
         while not self.tick():
             # Time control
-            tick = self.control.settings.fps
-            tick *= self.control.settings.debug_speed
             millisec = clock.tick(tick)
             # Update current FPS
             if millisec:

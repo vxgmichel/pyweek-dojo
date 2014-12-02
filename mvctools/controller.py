@@ -44,13 +44,6 @@ class BaseController(object):
         """
         pass
 
-    def _reload(self):
-        """Reinitialize the controller.
-
-        Called when the state is reloaded.
-        """
-        self.init()
-
     def _update(self):
         """Process the events.
 

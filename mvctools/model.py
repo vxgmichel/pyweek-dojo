@@ -77,19 +77,6 @@ class BaseModel(object):
         """
         self.lifetime = Timer(self).start()
 
-    def _reload(self):
-        """Reload itself and its children.
-
-        Called when the state is reloaded."""
-        self.reload()
-        [child._reload() for child in self.children.values()]
-
-    def reload(self):
-        """Empty method to override if needed.
-
-        Called when the state is reloaded.
-        """
-
     def _register_child(self, child):
         """Register a new child.
 
