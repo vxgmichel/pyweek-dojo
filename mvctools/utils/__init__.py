@@ -5,6 +5,6 @@ and camera features.
 """
 
 from mvctools.utils.text import TextSprite
-from mvctools.utils.camera import CameraModel, CameraView, CameraSprite
+from mvctools.utils.camera import CameraModel, CameraSprite
 from mvctools.utils.mapping import PlayerController, TwoPlayersController
 from mvctools.utils.mapping import PlayerAction

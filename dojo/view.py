@@ -10,7 +10,7 @@ from pygame import Rect, Surface, transform, draw, Color
 # MVC tools imports
 from mvctools import BaseView, AutoSprite, xytuple
 from mvctools.utils import TextSprite
-from mvctools.utils import CameraView
+from mvctools.utils import CameraSprite
 
 # Dojo imports
 from dojo.model import PlayerModel, RectModel, RoomModel
@@ -308,11 +308,14 @@ class StaticDojoView(BaseView):
 
 
 # Dojo camera view
-class DojoView(CameraView):
+class DojoView(BaseView):
     """Dojo view for the game state."""
 
-    view_cls = StaticDojoView
+    subview = StaticDojoView
     transparent = False
     fixed_size = 640, 360
+
+    def init(self):
+        self.camera = CameraSprite(self, self.subview)
 
 

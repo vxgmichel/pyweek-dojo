@@ -66,13 +66,6 @@ class CameraModel(BaseModel):
 
 class CameraSprite(ViewSprite):
 
-    def init(self):
-        ViewSprite.init(self)
-
-    @property
-    def view_cls(self):
-        return self.parent.view_cls
-
     @property
     def size(self):
         return self.parent.size
@@ -94,14 +87,5 @@ class CameraSprite(ViewSprite):
             self.set_dirty()
             dirty = None
         return ViewSprite.transform(self, screen, dirty)
-
-
-class CameraView(BaseView):
-
-    view_cls = BaseView
-
-    def init(self):
-        self.camera = CameraSprite(self)
-
 
 
