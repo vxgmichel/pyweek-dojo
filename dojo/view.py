@@ -296,7 +296,7 @@ class StaticDojoView(BaseView):
     """Dojo view without the camera move."""
 
     bgd_image = "image/room"
-    bgd_color = "darkgrey"
+    transparent = False
 
     sprite_class_dct = {PlayerModel: PlayerSprite,
                         RoomModel: RoomSprite,
@@ -312,7 +312,7 @@ class DojoView(CameraView):
     """Dojo view for the game state."""
 
     view_cls = StaticDojoView
-    transparent = False
+    #bgd_color = "darkgrey"
     fixed_size = 640, 360
 
 

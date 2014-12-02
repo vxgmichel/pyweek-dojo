@@ -66,7 +66,8 @@ class BaseView(object):
 
     def get_background(self):
         image = self.resource.get(self.bgd_image) if self.bgd_image else None
-        return self.scale_as_background(image, self.bgd_color)
+        return self.build_background(image, self.bgd_color, self.size,
+                                     self.transparent)
 
     def _reload(self):
         self.__init__(self, self.model)
@@ -79,8 +80,7 @@ class BaseView(object):
         self.gen_sprites()
         self.group.update()
         # Changes on a transparent background
-        if self.transparent and self.group.is_drawn and self.group.is_dirty \
-           or self.screen and self.size != self.screen.get_size():
+        if self.screen and self.size != self.screen.get_size():
             self.reset_screen()
         # Create screen
         self.update_screen()
@@ -128,14 +128,22 @@ class BaseView(object):
 
     @property
     def transparent(self):
-        return not (self.bgd_image or self.bgd_color)
+        return self.bgd_color is None or Color(self.bgd_color)[3] != 255
 
-    def scale_as_background(self, image=None, color=None):
-        if not image and not color:
+    def build_background(self, image=None, color=None, size=None, transparent=False):
+        # No background
+        if image is None and color is None:
             return None
-        color = Color(color)
-        bgd = pg.Surface(self.size)
-        bgd.fill(color)
+        # Get base
+        if transparent:
+             bgd = Surface(size, pg.SRCALPHA)
+        else:
+             bgd = Surface(size)
+        # Fill with color
+        if color is not None:
+            color = Color(color)
+            bgd.fill(color)
+        # Blit image
         if image is not None:
             scaled = self.resource.scale(image, self.size)
             bgd.blit(scaled, scaled.get_rect())
@@ -167,6 +175,7 @@ class PatchedLayeredDirty(LayeredDirty):
         _update_append = _update.append
         _ret = None
         _surf_blit = _surf.blit
+        _surf_fill = _surf.fill
         _rect = Rect
         if bgd is not None:
             self._bgd = bgd
@@ -215,9 +224,11 @@ class PatchedLayeredDirty(LayeredDirty):
         else:
             _update[:] = [_rect(_clip)]
         # 2. clear using background
-        if _bgd is not None:
-            for rec in _update:
+        for rec in _update:
+            if _bgd is not None:
                 _surf_blit(_bgd, rec, rec)
+            else:
+                pass#_surf_fill(0, rec)
         # 3. draw
         for spr in _sprites:
             if self._use_update and 1 > spr.dirty and spr._visible:
