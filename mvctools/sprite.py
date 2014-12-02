@@ -1,7 +1,7 @@
 import pygame as pg
 from pygame.sprite import DirtySprite
 from pygame import Rect, Surface, transform
-from mvctools.common import xytuple, cachedict, scale_rects
+from mvctools.common import xytuple, cachedict, scale_dirty
 from mvctools import BaseView
 
 
@@ -188,13 +188,11 @@ class ViewSprite(AutoSprite):
         screen_size = screen.get_size()
         if screen_size == self.size:
             return screen, dirty
-        if dirty:
-            dirty = scale_rects(dirty, screen_size, self.size)
         if all(screen.get_size()):
             if self.image.get_size() != self.size:
-                return self.resource.scale(screen, self.size), dirty
-            self.resource.scale(screen, self.size, self.image)
-            self.set_dirty()
+                return self.resource.scale(screen, self.size), None
+            dirty = scale_dirty(screen, self.image, dirty,
+                                self.resource.scale)
             return self.image, dirty
         image = Surface(self.size, screen.get_flags())
         return image, None

@@ -3,7 +3,7 @@ import pygame
 from mvctools.model import BaseModel
 from mvctools.controller import BaseController
 from mvctools.view import BaseView
-from mvctools.common import scale_rects
+from mvctools.common import scale_dirty
 
 
 class NextStateException(Exception):
@@ -50,9 +50,8 @@ class BaseState(object):
         screen, dirty = self.view._update()
         # Scale
         if actual_screen != screen:
-            size = actual_screen.get_size()
-            self.control.resource.scale(screen, size, actual_screen)
-            scale_rects(dirty, screen.get_size(), size)
+            dirty = scale_dirty(screen, actual_screen, dirty,
+                                self.control.resource.scale)
         # Update
         pygame.display.update(dirty)
 

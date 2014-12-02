@@ -5,7 +5,7 @@ import operator
 from math import ceil
 from functools import wraps
 from collections import namedtuple, defaultdict
-from pygame import Color
+from pygame import Color, Rect
 
 
 # XY namedtuple
@@ -118,16 +118,29 @@ class cursoredlist(list):
             self.cursor = index % len(self)
 
 
+def scale_dirty(source, dest, dirty, scale):
+    if dirty is None:
+        scale(source, dest.get_size(), dest)
+        return [dest.get_rect()]
+    source_rects = dirty
+    dest_rects = scale_rects(dirty, source.get_rect(), dest.get_rect())
+    for source_rect, dest_rect in zip(source_rects, dest_rects):
+        image = scale(source.subsurface(source_rect), dest_rect.size)
+        dest.blit(image, dest_rect)
+    return dest_rects
+
+
 # Scale rectangles function
-def scale_rects(rects, source_size, dest_size):
-    if not all(source_size):
+def scale_rects(rects, source, dest):
+    if not all(source.size):
         return
-    ratio = xytuple(*dest_size).map(float)/source_size
+    ratio = xytuple(dest.size).map(float)/source.size
+    lst = []
     for rect in rects:
         topleft = (ratio * rect.topleft).map(int)
         bottomright = (ratio * rect.bottomright).map(ceil)
-        rect.topleft, rect.size = topleft, bottomright - topleft
-    return rects
+        lst.append(Rect(topleft, bottomright - topleft).clip(dest))
+    return lst
 
 
 # Cache dictionary
