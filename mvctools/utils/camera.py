@@ -79,8 +79,7 @@ class CameraSprite(ViewSprite):
             return self.image, None
         # Crop the screen with the camera rectangle
         if self.model.camera_rect != screen.get_rect():
-            cropped = Surface(self.model.camera_rect.size).convert_alpha()
-            cropped.blit(screen, (0, 0), self.model.camera_rect)
+            cropped = screen.subsurface(self.model.camera_rect)
             return ViewSprite.transform(self, cropped, None)
         # Update needed
         if self.model.camera_changed:
