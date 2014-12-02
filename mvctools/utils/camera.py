@@ -68,7 +68,7 @@ class CameraSprite(ViewSprite):
 
     @property
     def size(self):
-        return self.parent.size
+        return self.parent.screen_size
 
     def get_rect(self):
         return self.image.get_rect()

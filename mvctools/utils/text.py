@@ -145,7 +145,7 @@ class TextView(BaseView):
             return self.max_width, 0
 
     @property
-    def fixed_size(self):
+    def size(self):
         if not self.group:
             return xytuple(0, 0)
         x = max(sprite.rect.right for sprite in self.group)

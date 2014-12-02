@@ -208,7 +208,7 @@ class ViewSprite(AutoSprite):
         
     @property
     def screen_size(self):
-        return self.view.size 
+        return self.view.screen_size
 
     @property
     def size(self):

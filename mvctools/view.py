@@ -13,9 +13,9 @@ from mvctools.common import xytuple, cachedict, Color
 # Base view class
 class BaseView(object):
 
+    size = None
     bgd_image = None
     bgd_color = None
-    fixed_size = None
     sprite_class_dct = {}
 
     def __init__(self, parent, model):
@@ -54,7 +54,7 @@ class BaseView(object):
         self.screen = None
 
     def get_screen(self):
-        size = self.fixed_size
+        size = self.size
         if size is None:
             data = self.parent.get_surface()
             if isinstance(data, Surface):
@@ -77,7 +77,7 @@ class BaseView(object):
         self.gen_sprites()
         self.group.update()
         # Changes on a transparent background
-        if self.screen and self.size != self.screen.get_size():
+        if self.screen and self.screen_size != self.screen.get_size():
             self.reset_screen()
         # Create screen
         self.update_screen()
@@ -118,10 +118,10 @@ class BaseView(object):
         return next(gen_filtered, None)
 
     @property
-    def size(self):
-        if self.fixed_size is None:
+    def screen_size(self):
+        if self.size is None:
             return self.screen.get_size()
-        return self.fixed_size
+        return self.size
 
     @property
     def transparent(self):

@@ -302,9 +302,10 @@ class StaticDojoView(BaseView):
                         RoomModel: RoomSprite,
                         RectModel: RectSprite}
 
-    def get_screen(self):
+    @property
+    def size(self):
         """Create game screen."""
-        return Surface(self.model.size)
+        return self.model.size
 
 
 # Dojo camera view
