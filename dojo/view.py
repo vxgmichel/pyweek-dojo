@@ -314,7 +314,7 @@ class DojoView(BaseView):
 
     subview = StaticDojoView
     transparent = False
-    fixed_size = 640, 360
+    size = 640, 360
 
     def init(self):
         self.camera = CameraSprite(self, self.subview)

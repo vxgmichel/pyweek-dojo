@@ -182,7 +182,6 @@ class PatchedLayeredDirty(LayeredDirty):
         Return the corresponding rectangle.
         """
         # Aliases
-        sprites = self._spritelist
         old_rect_dct = self.spritedict
         use_update = self._use_update
         # Test dirty rects
@@ -194,7 +193,7 @@ class PatchedLayeredDirty(LayeredDirty):
         # Get actual size
         try: size_rect = Rect((0,0), sprite.source_rect.size)
         except AttributeError: size_rect = Rect((0,0), sprite.rect.size)
-        # Update structures
+        # Compare rect
         new_rect = size_rect.move(sprite.rect.topleft)
         has_moved = new_rect != old_rect_dct[sprite]
         # Whole rect is dirty

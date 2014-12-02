@@ -191,8 +191,11 @@ class ViewSprite(AutoSprite):
         if dirty:
             dirty = scale_rects(dirty, screen_size, self.size)
         if all(screen.get_size()):
-            image = self.resource.scale(screen, self.size)
-            return image, dirty
+            if self.image.get_size() != self.size:
+                return self.resource.scale(screen, self.size), dirty
+            self.resource.scale(screen, self.size, self.image)
+            self.set_dirty()
+            return self.image, dirty
         image = Surface(self.size, screen.get_flags())
         return image, None
 
