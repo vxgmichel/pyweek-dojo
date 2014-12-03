@@ -3,6 +3,7 @@
 # Imports
 import operator
 from math import ceil
+from fractions import gcd
 from functools import wraps
 from collections import namedtuple, defaultdict
 from pygame import Color, Rect
@@ -34,16 +35,20 @@ class xytuple(namedtuple("xytuple",("x","y"))):
         if y is None: x, y = x
         return super(xytuple, cls).__new__(cls, x, y)
 
-    __add__ = __iadd__ = lambda self, it: xytuple(*map(operator.add, self, it))
+    def map(self, func, *args):
+        """Map the coordinates with the given function a return an xytuple."""
+        return xytuple(map(func, self, *args))
+
+    __add__ = __iadd__ = lambda self, it: self.map(operator.add, it)
     __add__.__doc__ = """Add a 2-elements iterable and return an xytuple.
                       """
-    __sub__ = __isub__ = lambda self, it: xytuple(*map(operator.sub, self, it))
+    __sub__ = __isub__ = lambda self, it: self.map(operator.sub, it)
     __sub__.__doc__ = """Substract a 2-elements iterable and return an xytuple.
                       """
-    __mul__ = __imul__ = lambda self, it: xytuple(*map(operator.mul, self, it))
+    __mul__ = __imul__ = lambda self, it: self.map(operator.mul, it)
     __mul__.__doc__ = """Product by a 2-elements iterable and return an xytuple.
                       """
-    __div__ = __idiv__ = lambda self, it: xytuple(*map(operator.div, self, it))
+    __div__ = __idiv__ = lambda self, it: self.map(operator.div, it)
     __div__.__doc__ = """Divide by a 2-elements iterable and return an xytuple.
                       """
     __neg__ = lambda self: self * (-1,-1)
@@ -52,10 +57,6 @@ class xytuple(namedtuple("xytuple",("x","y"))):
     __abs__ = lambda self: abs(complex(*self))
     __abs__.__doc__ = """Return a float, the norm of the coordinates.
                       """
-
-    def map(self, func):
-        """Map the coordinates with the given function a return an xytuple."""
-        return xytuple(*map(func, self))
 
 
 # Direction enumeration
@@ -119,28 +120,51 @@ class cursoredlist(list):
 
 
 def scale_dirty(source, dest, dirty, scale):
+    if not all(source.get_size()):
+        return
     if dirty is None:
         scale(source, dest.get_size(), dest)
         return [dest.get_rect()]
-    source_rects = dirty
     dest_rects = scale_rects(dirty, source.get_rect(), dest.get_rect())
-    for source_rect, dest_rect in zip(source_rects, dest_rects):
-        image = scale(source.subsurface(source_rect), dest_rect.size)
-        dest.blit(image, dest_rect)
+    for source_rect, dest_rect in zip(dirty, dest_rects):
+        subsource = source.subsurface(source_rect)
+        subdest = dest.subsurface(dest_rect)
+        scale(subsource, dest_rect.size, subdest)
     return dest_rects
 
 
 # Scale rectangles function
 def scale_rects(rects, source, dest):
-    if not all(source.size):
-        return
-    ratio = xytuple(dest.size).map(float)/source.size
-    lst = []
+    # Initialize
+    gcds = xytuple(dest.size).map(gcd, source.size)
+    ratios = gcds.map(float)/source.size
+    size_ratios = xytuple(dest.size).map(float) / source.size
+    source_lst, dest_lst = [], []
+    # Update source rectangles
     for rect in rects:
-        topleft = (ratio * rect.topleft).map(int)
-        bottomright = (ratio * rect.bottomright).map(ceil)
-        lst.append(Rect(topleft, bottomright - topleft).clip(dest))
-    return lst
+        topleft = (ratios * rect.topleft).map(int) / ratios
+        bottomright = (ratios * rect.bottomright).map(ceil) / ratios
+        rect.topleft, rect.size = topleft, bottomright - topleft
+        update_rect_list(rect, source_lst, source)
+    rects[:] = source_lst
+    # Get dest recangles
+    for rect in source_lst:
+        topleft = size_ratios * rect.topleft
+        bottomright = size_ratios * rect.bottomright
+        dest_lst.append(Rect(topleft, bottomright - topleft))
+    # Return
+    return dest_lst
+
+
+# Update rect list
+def update_rect_list(rect, lst, clip):
+    """Append a rectangle to a list using union and clip."""
+    i = rect.collidelist(lst)
+    while -1 < i:
+        rect.union_ip(lst[i])
+        del lst[i]
+        i = rect.collidelist(lst)
+    lst.append(rect.clip(clip))
 
 
 # Cache dictionary

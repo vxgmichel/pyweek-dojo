@@ -7,7 +7,7 @@ from functools import partial
 
 # MVC tools imports
 import mvctools
-from mvctools.common import xytuple, cachedict, Color
+from mvctools.common import Color, xytuple, update_rect_list
 
 
 # Base view class
@@ -158,16 +158,6 @@ class PatchedLayeredDirty(LayeredDirty):
     while avoiding performance issue.
     """
 
-    @staticmethod
-    def _update_rect_list(rect, lst, clip):
-        """Append a rectangle to a list using union and clip."""
-        i = rect.collidelist(lst)
-        while -1 < i:
-            rect.union_ip(lst[i])
-            del lst[i]
-            i = rect.collidelist(lst)
-        lst.append(rect.clip(clip))
-
     def _prepare_sprites(self):
         """Prepare the sprites before drawing.
 
@@ -177,7 +167,7 @@ class PatchedLayeredDirty(LayeredDirty):
                     for sprite in self._spritelist)
 
     def _prepare_sprite(self, sprite):
-        """Prepare a sprite before drawing. and
+        """Prepare a sprite before drawing.
 
         Return the corresponding rectangle.
         """
@@ -231,13 +221,13 @@ class PatchedLayeredDirty(LayeredDirty):
         if sprite.dirty > 0 and sprite.visible:
             for area in sprite.dirty_rects:
                 rect = area.move(sprite.rect.topleft)
-                self._update_rect_list(rect, rect_lst, clip)
+                update_rect_list(rect, rect_lst, clip)
         # Old rectangle
         if sprite.dirty > 0:
             old_rect = Rect(self.spritedict[sprite])
             has_changed = old_rect and old_rect != new_rect
             if has_changed or not sprite.visible:
-                self._update_rect_list(old_rect, rect_lst, clip)
+                update_rect_list(old_rect, rect_lst, clip)
 
     def _clear_surface(self, rect_lst, surface, bgd=None):
         """Clear a surface using a background and a dirty rectangle list."""
