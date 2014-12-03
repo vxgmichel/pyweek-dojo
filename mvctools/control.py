@@ -1,7 +1,7 @@
 """Module for the state control related objects."""
 
 # Imports
-import pygame, sys
+import pygame, argparse
 from mvctools.gamedata import BaseGamedata
 from mvctools.state import BaseState, NextStateException
 from mvctools.settings import BaseSettings
@@ -41,7 +41,7 @@ class BaseControl(object):
      - **push_current_state** : push the current state into the stack
      - **register_next_state** : register the class of the next state to
        instantiate and run
-    
+
     Some important points to know about the control creating the next state:
      - The registered state is automatically unregistered when instanciated
      - If no state is registered, the next state is poped from the stack
@@ -50,17 +50,17 @@ class BaseControl(object):
     To launch the game, simply call the method run.
 
     Example: ::
-    
+
         # Create the main control
         class Example(BaseControl):
 
             window_title = "Example v1.0"
             first_state = SomeState
-            
+
             def pre_run(self) :
                 super(Example, self).pre_run()
                 pygame.mouse.set_visible(False)
-            
+
         # Run the main control
         example = Example()
         example.run()
@@ -72,7 +72,9 @@ class BaseControl(object):
     first_state = None
     resource_dir = "resource"
     window_title = "Pygame"
-    
+    version = None
+    description = None
+
     def __init__(self):
         """Initialize the state control."""
         self.next_state = self.first_state
@@ -105,7 +107,21 @@ class BaseControl(object):
         if self.current_state and self.current_state.ticking:
             self.push_current_state()
             raise NextStateException
-        
+
+    def main(self):
+        """Parse the command line arguments and run the game."""
+        description = self.description or self.__doc__
+        formatter_class = argparse.RawDescriptionHelpFormatter
+        parser = argparse.ArgumentParser(description=description,
+                                         formatter_class=formatter_class)
+        if self.version:
+            parser.add_argument('--version',
+                                action='version',
+                                version=self.version)
+        self.settings.parse_arguments(parser)
+        return self.run()
+
+
     def run(self):
         """Run the game."""
         # Prepare the run
@@ -155,5 +171,5 @@ class BaseControl(object):
     def safe_exit():
         """Exit pygame safely."""
         pygame.quit()
-        
+
 

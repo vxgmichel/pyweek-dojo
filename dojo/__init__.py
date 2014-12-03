@@ -22,11 +22,18 @@ class DojoState(BaseState):
 
 # Create the main control
 class Dojo(BaseControl):
-    """Dojo game main class."""
+    """
+    Dojo: a minimalistic versus fighting game
+    -----------------------------------------
+    In one dojo, with one life, so one hit causes one win.
+    The gameplay is based on the fact that you can grab the walls
+    and ceiling of the room to jump on your opponent.
+    """
 
     window_title = "Dojo"
     first_state = DojoState
     resource_dir = relative("resource")
+    version = "1.3.0"
 
     def pre_run(self) :
         """Hide the mouse"""
@@ -36,14 +43,6 @@ class Dojo(BaseControl):
 # Main function
 def main():
     dojo = Dojo()
-    # Settings
-    dojo.settings.fps = 60
-    dojo.settings.size = 1280, 720
-    dojo.settings.fullscreen = False
-    # Debug
-    dojo.settings.display_fps = False
-    dojo.settings.profile = False
-    dojo.settings.debug_speed = 1
-    dojo.settings.debug_mode = False
-    # Run
-    dojo.run()
+    # Uncomment to display all settings in help
+    # dojo.settings.arg_lst = None
+    dojo.main()

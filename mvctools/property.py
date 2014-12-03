@@ -90,14 +90,15 @@ class default_property(property):
         def fdel(self):
             delattr(self, attr_name)
         # Create property
-        return property.__init__(self, fget, fset, fdel)
-    
+        property.__init__(self, fget, fset, fdel)
+        self.__doc__ = factory.__doc__
+
 
 # Setting property
 class setting(property):
     """Property that provides aditional features for settings.
 
-    It uses three functions: 
+    It uses three functions:
      - **cast** function to apply before the new value is set
      - **from_string** function to apply if the new value is a string
      - **to_string** function to get the string representation of the value
