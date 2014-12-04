@@ -60,12 +60,10 @@ Or install it:
 
 ## Settings
 
-One can change the the screen size, the frame rate or switch
+One can change the screen size, frame rate or switch
 to fullscreen mode by using the command line interface:
 
     $ python Dojo.py -h # To display the complete description
-	usage: Dojo.py [-h] [--version] [--fps FPS] [--fullscreen] [--size SIZE]
-	[...]
 	$ python Dojo.py --size 800x600 --fps 50 --fullscreen # Example
 
 Here is the argument list:
@@ -76,7 +74,7 @@ Here is the argument list:
   - **--fullscreen** : enable fullscreen mode (inactive when omitted)
   - **--size SIZE**  : size of the screen (default is 1280x720)
 
-Note: The window size is completely decoupled from the game size
+The window size is completely decoupled from the game size
 and the frame rate doesn't affect the actual speed of the game.
 
 ## MVC Tools
