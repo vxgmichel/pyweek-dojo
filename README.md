@@ -14,13 +14,15 @@ and ceiling of the room to jump on your opponent.
  - Python 2.7
  - Pygame 1.9
 
-## Run and installation
+## Usage
 
-    # Run locally
-    $ python Dojo.py 
-	# Another way
-    $ python -m dojo
-	# Or install it
+Run locally:
+
+    $ python Dojo.py # Or
+	$ python -m dojo
+
+Or install it:
+
     $ python setup.py install
 	$ Dojo
 
@@ -68,11 +70,11 @@ to fullscreen mode by using the command line interface:
 
 Here is the argument list:
 
-  - **-h, --help**:   show this help message and exit
-  - **--version**:    show program's version number and exit
-  - **--fps FPS**:    frame rate in frames per second (default is 60)
-  - **--fullscreen**: enable fullscreen mode (inactive when omitted)
-  - **--size SIZE**:  size of the screen (default is 1280x720)
+  - **-h, --help**   - show this help message and exit
+  - **--version**    - show program's version number and exit
+  - **--fps FPS**    - frame rate in frames per second (default is 60)
+  - **--fullscreen** - enable fullscreen mode (inactive when omitted)
+  - **--size SIZE**  - size of the screen (default is 1280x720)
 
 Note: The window size is completely decoupled from the game size
 and the frame rate doesn't affect the actual speed of the game.
@@ -89,9 +91,9 @@ These sources are available on [gitbub]
 
 ## Windows executable
 
-A windows executable is available on [sourceforge]
+A windows executable can be found on [sourceforge]
 (https://sourceforge.net/projects/pyweek-dojo/files/latest/download).
-It can also be built using `pyinstaller Dojo.spec`.
+or built using `pyinstaller Dojo.spec`.
 
 ## License
 
