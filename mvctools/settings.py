@@ -137,6 +137,8 @@ class BaseSettings(object):
             attr = getattr(type(self), name, None)
             if isinstance(attr, setting):
                 # Values
+                argname = '--' + name.replace('_', '-')
+                metavar = name[:3].upper() if len(name) > 4 else name.upper()
                 default = self.setting_to_string(name)
                 boolean = attr.cast is bool and not getattr(self, name)
                 type_func = lambda value, name=name: setattr(self, name, value)
@@ -152,14 +154,14 @@ class BaseSettings(object):
                         desc += " (default is {0})".format(default)
                 # Boolean property
                 if boolean:
-                    parser.add_argument('--' + name,
+                    parser.add_argument(argname,
                                         action="store_true",
                                         default=None,
                                         help=desc)
                 # Regular property
                 else:
-                    parser.add_argument('--' + name,
-                                        metavar=name[:3].upper(),
+                    parser.add_argument(argname,
+                                        metavar=metavar,
                                         default=None,
                                         type=type_func,
                                         help=desc)
