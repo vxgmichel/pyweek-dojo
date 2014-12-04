@@ -95,7 +95,8 @@ or built using `pyinstaller Dojo.spec`.
 
 ## License
 
-pyweek-dojo is licensed under the [GPLv3](http://www.gnu.org/licenses/gpl-3.0-standalone.html)
+pyweek-dojo is licensed under the [GPLv3]
+(http://www.gnu.org/licenses/gpl-3.0-standalone.html).
 
 ## Acknowledgement
 
