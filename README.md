@@ -14,18 +14,15 @@ and ceiling of the room to jump on your opponent.
  - Python 2.7
  - Pygame 1.9
 
-## Run locally
+## Run and installation
 
-    $ python Dojo.py # Or
+    # Run locally
+    $ python Dojo.py 
+	# Another way
     $ python -m dojo
-
-## Installation
-
+	# Or install it
     $ python setup.py install
-
-## Build executable
-
-    $ pyinstaller Dojo.spec
+	$ Dojo
 
 ## Gameplay
 
@@ -92,12 +89,20 @@ These sources are available on [gitbub]
 
 ## Windows executable
 
-A windows executable is available on [sourceforge]
+A windows executable can be built using:
+
+    $ pyinstaller Dojo.spec
+	
+It is also available on [sourceforge]
 (https://sourceforge.net/projects/pyweek-dojo/files/latest/download).
 
 ## License
 
 pyweek-dojo is licensed under the [GPLv3](http://www.gnu.org/licenses/gpl-3.0-standalone.html)
+
+## Acknowledgement
+
+Thanks to Johan Forsberg for the graphics.
 
 ## Author
 
