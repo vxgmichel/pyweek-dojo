@@ -147,7 +147,9 @@ class BaseSettings(object):
                 desc = argparse.SUPPRESS
                 if self.arg_lst is None or name in self.arg_lst:
                     desc = attr.__doc__ or ''
-                    desc = desc.split('.')[0]
+                    if desc:
+                        desc = desc.split('.')[0]
+                        desc = desc[0].lower() + desc[1:]
                     if boolean:
                         desc += " (inactive when omitted)".format(default)
                     else:

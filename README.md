@@ -16,8 +16,7 @@ and ceiling of the room to jump on your opponent.
 
 ## Run locally
 
-    $ python Dojo.py
-    # Or
+    $ python Dojo.py # Or
     $ python -m dojo
 
 ## Installation
@@ -74,9 +73,9 @@ Here is the argument list:
 
   - **-h, --help**:   show this help message and exit
   - **--version**:    show program's version number and exit
-  - **--fps FPS**:    Frame rate in frames per second (default is 60)
-  - **--fullscreen**: Enable fullscreen mode (inactive when omitted)
-  - **--size SIZE**:  Size of the screen (default is 1280x720)
+  - **--fps FPS**:    frame rate in frames per second (default is 60)
+  - **--fullscreen**: enable fullscreen mode (inactive when omitted)
+  - **--size SIZE**:  size of the screen (default is 1280x720)
 
 Note: The window size is completely decoupled from the game size
 and the frame rate doesn't affect the actual speed of the game.
