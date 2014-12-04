@@ -89,12 +89,9 @@ These sources are available on [gitbub]
 
 ## Windows executable
 
-A windows executable can be built using:
-
-    $ pyinstaller Dojo.spec
-	
-It is also available on [sourceforge]
+A windows executable is available on [sourceforge]
 (https://sourceforge.net/projects/pyweek-dojo/files/latest/download).
+It can also be built using `pyinstaller Dojo.spec`.
 
 ## License
 
