@@ -99,7 +99,7 @@ class RoomModel(BaseModel):
             lst.append(abs(pos_1-pos_2))
             lst.append(abs(pos_1-pos_3))
         # Set speed
-        if min(lst) > float(self.threshold):
+        if not self.colliding and min(lst) > float(self.threshold):
             if self.time_speed: self.time_speed = 1.0
             self.parent.reset_camera()
         else:
@@ -126,12 +126,14 @@ class RoomModel(BaseModel):
 
     def update_step(self):
         """Detect collision between the 2 players."""
-        return self.update_speed() or self.update_hit() or self.update_collision()
+        return self.update_speed() or self.update_hit() \
+               or self.update_collision()
 
     def update_hit(self):
         """Test collision between players."""
         # Test ko
         if any(self.players[pid].ko for pid in (1,2)):
+            self.colliding = False
             return
         # Prepare collision function
         hit = {1:False, 2:False}

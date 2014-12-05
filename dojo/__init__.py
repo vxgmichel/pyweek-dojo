@@ -35,7 +35,6 @@ class Dojo(BaseControl):
         """Hide the mouse"""
         super(Dojo, self).pre_run()
         pygame.mouse.set_visible(False)
-        raise StopIteration
 
 # Main function
 def main():
