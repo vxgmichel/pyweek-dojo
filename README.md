@@ -9,12 +9,14 @@ In one dojo, with one life, so one hit causes one win.
 The gameplay is based on the fact that you can grab the walls
 and ceiling of the room to jump on your opponent.
 
-## Requirement
+Requirement
+-----------
 
  - Python 2.7
  - Pygame 1.9
 
-## Run the game
+Run the game
+------------
 
 Run locally:
 
@@ -26,7 +28,8 @@ Or install it:
     $ python setup.py install
 	$ Dojo
 
-## Gameplay
+Gameplay
+--------
 
  - Since it's a versus fighting game, you need to be two players.
  - The characters can't walk, run or hit. Only jump.
@@ -39,7 +42,8 @@ Or install it:
  - Counters on the wall keep track of the score.
  - Controllers are supported (reset to detect new controllers).
 
-## Controls
+Controls
+--------
 
 **Player 1:**
  - Move : RDFG
@@ -58,7 +62,8 @@ Or install it:
   - Reset : U
   - Quit : Escape
 
-## Settings
+Settings
+--------
 
 One can change the screen size, frame rate or switch
 to fullscreen mode by using the command line interface:
@@ -67,7 +72,6 @@ to fullscreen mode by using the command line interface:
 	$ python Dojo.py --size 800x600 --fps 50 --fullscreen # Example
 
 Here is the argument list:
-
   - **-h, --help**   : show this help message and exit
   - **--version**    : show program's version number and exit
   - **--fps FPS**    : frame rate in frames per second (default is 60)
@@ -77,31 +81,43 @@ Here is the argument list:
 The window size is completely decoupled from the game size
 and the frame rate doesn't affect the actual speed of the game.
 
-## MVC Tools
+MVC Tools
+---------
 
-The game is based on [pygame-mvctools](https://github.com/vxgmichel/pygame-mvctools),
+The game is based on [pygame-mvctools]
+(https://github.com/vxgmichel/pygame-mvctools),
 a library for writing games using the model-view-controller design pattern.
 
-## Repository
+The main purpose of this library is to easily design a game as a succession
+of states. Each of these states owns its own model, view and controller for
+which base classes are provided. Other high level features are available,
+like resource handling and automatically updated sprites.
+
+Repository
+----------
 
 These sources are available on [gitbub]
 (https://github.com/vxgmichel/pyweek-dojo).
 
-## Windows executable
+Windows executable
+------------------
 
 A windows executable can be found on [sourceforge]
 (https://sourceforge.net/projects/pyweek-dojo/files/latest/download)
 or built using `pyinstaller Dojo.spec`.
 
-## License
+License
+-------
 
 pyweek-dojo is licensed under the [GPLv3]
 (http://www.gnu.org/licenses/gpl-3.0-standalone.html).
 
-## Acknowledgement
+Acknowledgement
+---------------
 
 Thanks to Johan Forsberg for the graphics.
 
-## Author
+Author
+------
 
 Vincent Michel
