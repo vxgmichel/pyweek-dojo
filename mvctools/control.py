@@ -1,7 +1,7 @@
 """Module for the state control related objects."""
 
 # Imports
-import pygame, argparse
+import pygame, argparse, os
 from mvctools.gamedata import BaseGamedata
 from mvctools.state import BaseState, NextStateException
 from mvctools.settings import BaseSettings
@@ -80,7 +80,8 @@ class BaseControl(object):
         self.next_state = self.first_state
         self.settings = self.settings_class(self)
         self.gamedata = self.gamedata_class()
-        self.resource = ResourceHandler(self.resource_dir)
+        resource_dir = os.path.join(self.root_dir, self.resource_dir)
+        self.resource = ResourceHandler(resource_dir)
         self.current_state = None
         self.state_stack = []
 
@@ -166,6 +167,37 @@ class BaseControl(object):
     def get_fps(self):
         """Get the current fps rate setting."""
         return self.settings.get_fps()
+
+    @property
+    def root_dir(self):
+        """Get the parent directory of the top-level package."""
+        if not self.__module__:
+            return ""
+        root_module = __import__(self.__module__.split(".")[0])
+        return os.path.join(root_module.__path__[0], os.pardir)
+
+    @classmethod
+    def setup(cls, **kwargs):
+        """Convenience setup script based on setuptools.setup."""
+        from setuptools import setup, find_packages
+        # Get data
+        script_name = cls.__name__
+        main = ":".join((cls.__module__.split('.')[0], "main"))
+        script = "=".join((script_name, main))
+        # Set missing keyword arguments
+        kwargs.setdefault("version", cls.version)
+        kwargs.setdefault("description", cls.description or cls.__doc__)
+        kwargs.setdefault("entry_points", {'gui_scripts': [script]})
+        kwargs.setdefault("packages", find_packages())
+        kwargs.setdefault("data_files", cls.find_data_files())
+        # Run setup
+        setup(**kwargs)
+
+    @classmethod
+    def find_data_files(cls):
+        """Enumerate all files in the resource directory."""
+        return [(path, [path+os.sep+f for f in files])
+                for path, _, files in os.walk(cls.resource_dir)]
 
     @staticmethod
     def safe_exit():

@@ -7,10 +7,6 @@ from dojo.model import DojoModel
 from dojo.view import DojoView
 from dojo.controller import DojoController
 
-# Get root
-def relative(path):
-    """Relative path to find resources."""
-    return os.path.join(dojo.__path__[0], os.pardir, path)
 
 # Create the main game state
 class DojoState(BaseState):
@@ -32,7 +28,7 @@ class Dojo(BaseControl):
 
     window_title = "Dojo"
     first_state = DojoState
-    resource_dir = relative("resource")
+    resource_dir = "resource"
     version = "1.3.0"
 
     def pre_run(self) :
