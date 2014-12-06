@@ -68,8 +68,8 @@ class TwoPlayersController(PlayerController):
                pg.K_n:         (PlayerAction.BACK, 1),
                pg.K_p:         (PlayerAction.ACTIVATE, 2),
                pg.K_KP_ENTER:  (PlayerAction.ACTIVATE, 2),
-               pg.K_o:         (PlayerAction.BACK, 1),
-               pg.K_KP_PERIOD: (PlayerAction.BACK, 1),
+               pg.K_o:         (PlayerAction.BACK, 2),
+               pg.K_KP_PERIOD: (PlayerAction.BACK, 2),
                pg.K_u:         (PlayerAction.START,  None),
                pg.K_j:         (PlayerAction.SELECT, None),
                pg.K_ESCAPE:    (PlayerAction.ESCAPE, None),}

@@ -74,7 +74,7 @@ class BaseView(object):
         self.update_screen()
         # Update
         self.update()
-        self.gen_sprites()
+        self.update_sprites()
         self.group.update()
         # Changes on a transparent background
         if self.screen and self.screen_size != self.screen.get_size():
@@ -89,15 +89,21 @@ class BaseView(object):
     def update(self):
         pass
 
-    def clear(self):
+    def delete(self):
         for sprite in self.sprite_dct.values():
-            sprite.clear()
+            sprite.delete()
         for sprite in self.group:
-            sprite.clear()
+            sprite.delete()
         self.sprite_dct.clear()
+        self.parent = None
 
-    def gen_sprites(self):
-        for _, obj in self.model.get_model_dct():
+    def update_sprites(self):
+        dct = self.model.get_model_dct()
+        removed = set(self.sprite_dct).difference(dct)
+        for key in removed:
+            sprite = self.sprite_dct.pop(key)
+            sprite.delete()
+        for obj in dct.values():
             self.gen_sprite(obj)
 
     def gen_sprite(self, obj):
@@ -211,7 +217,9 @@ class PatchedLayeredDirty(LayeredDirty):
         # Full update case
         if not self._use_update:
             return [Rect(clip)]
-        rect_lst = self.lostsprites
+        rect_lst = []
+        for rect in self.lostsprites:
+            update_rect_list(rect, rect_lst, clip)
         # Loop over sprites
         for sprite in self._spritelist:
             new_rect = new_rect_dct[sprite]

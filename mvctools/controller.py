@@ -321,7 +321,7 @@ class MappingController(BaseController):
             return
         # Generic action
         if not as_player:
-            return self.model.register(action)
+            return self.model.register(action, down)
         # Player related action
         return self.model.register(action, player, down)
 

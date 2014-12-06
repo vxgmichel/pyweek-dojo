@@ -217,10 +217,6 @@ class ResourceHandler:
     def __iter__(self):
         return self.iterator()
 
-    def __del__(self):
-        try: self.unload()
-        except: pass
-
     def __str__(self):
         return "RessourceHandler : {}".format(self._dir)
 

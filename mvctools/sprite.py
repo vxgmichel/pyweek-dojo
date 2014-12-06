@@ -51,11 +51,12 @@ class AutoSprite(DirtySprite):
         self.group = None
         super(AutoSprite, self).kill()
 
-    def clear(self):
+    def delete(self):
         self.kill()
         for child in self.children:
-            child.clear()
+            child.delete()
         self.children = []
+        self.parent = None
 
     def register_child(self, child):
         self.children.append(child)

@@ -129,6 +129,18 @@ class BaseModel(object):
         """
         pass
 
+    def gen_model_dct(self):
+        """Recursively generate the dictionnary of all models with
+        their associated key (including itself).
+
+        Return:
+            dict: the (key, model) dictionnary
+        """
+        yield self.key, self
+        for child in self.children.values():
+            for value in child.gen_model_dct():
+                yield value
+
     def get_model_dct(self):
         """Recursively get the dictionnary of all models with
         their associated key (including itself).
@@ -136,9 +148,7 @@ class BaseModel(object):
         Return:
             dict: the (key, model) dictionnary
         """
-        iterators = [child.get_model_dct() for child in self.children.values()]
-        value = (self.key, self)
-        return chain([value], *iterators)
+        return dict(self.gen_model_dct())
 
     def get_image(self):
         """Get the current image.
@@ -185,9 +195,13 @@ class BaseModel(object):
         """
         return self.children.values()
 
-    def __del__(self):
-        """Unregister itself."""
+    def delete(self):
+        """Delete the model."""
         self.parent._unregister_child(self)
+        for child in self.children.values():
+            child.delete()
+        self.children.clear()
+        self.parent = None
 
 
 # Timer model class

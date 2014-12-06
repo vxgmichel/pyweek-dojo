@@ -37,7 +37,7 @@ class BaseState(object):
         self.ticking = False
 
     def clean(self):
-        self.view.clear()
+        self.view.delete()
         self.controller = None
         self.view = None
         gc.collect()
