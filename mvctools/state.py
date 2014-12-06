@@ -1,5 +1,5 @@
 
-import pygame
+import pygame, gc
 from mvctools.model import BaseModel
 from mvctools.controller import BaseController
 from mvctools.view import BaseView
@@ -33,7 +33,19 @@ class BaseState(object):
         self.model = self.model_class(self)
         self.controller = self.controller_class(self, self.model)
         self.view = self.view_class(self, self.model)
-        self.current_fps = self.control.settings.fps
+        self.current_fps = None
+        self.ticking = False
+
+    def clean(self):
+        self.view.clear()
+        self.controller = None
+        self.view = None
+        gc.collect()
+
+    def reload(self):
+        self.controller = self.controller_class(self, self.model)
+        self.view = self.view_class(self, self.model)
+        self.current_fps = None
         self.ticking = False
 
     def tick(self):
@@ -63,20 +75,21 @@ class BaseState(object):
         return 1.0 / self.current_fps
 
     def run(self):
-        # Set current FPS
-        self.current_fps = float(self.control.settings.fps)
-        # Display FPS
+        # Get settings
         string = None
+        limit_fps = float(self.control.settings.fps)
+        debug_speed = float(self.control.settings.debug_speed)
         if self.control.settings.display_fps:
             string = self.control.window_title + "   FPS = {:3}"
-        # Create clock
+        # Init time
         clock = self.clock_class()
         # Freeze current fps for the first two ticks
+        self.current_fps = limit_fps
         if self.tick():
             return
         # Time control
-        tick = self.control.settings.fps
-        tick *= self.control.settings.debug_speed
+        tick = limit_fps
+        tick *= debug_speed
         millisec = clock.tick(tick)
         # Profile
         if self.control.settings.profile:
@@ -91,7 +104,7 @@ class BaseState(object):
             # Update current FPS
             if millisec:
                 self.current_fps = 1000.0/millisec
-                self.current_fps /= self.control.settings.debug_speed
+                self.current_fps /= debug_speed
             # Update window caption
             rate = clock.get_fps()
             if rate and string:

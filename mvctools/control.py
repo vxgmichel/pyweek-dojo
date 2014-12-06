@@ -98,15 +98,20 @@ class BaseControl(object):
             self.next_state = None
         elif self.state_stack:
             self.current_state = self.pop_state()
-            self.reload()
+            self.current_state.reload()
         else:
             self.current_state = None
         return self.current_state
 
-    def reload_state(self):
+    def reload_state(self, fully=True):
         """Fully reload the current state."""
-        if self.current_state and self.current_state.ticking:
+        if not self.current_state:
+            return
+        if fully:
+            self.register_next_state(type(self.current_state))
+        else:
             self.push_current_state()
+        if self.current_state.ticking:
             raise NextStateException
 
     def main(self):
@@ -131,10 +136,21 @@ class BaseControl(object):
         while self.load_next_state():
             try:
                 self.current_state.run()
+                self.current_state.clean()
             except SystemExit:
                 break
+            self.debug()
         # Exit safely
         self.safe_exit()
+
+
+    def debug(self):
+        import gc, pprint
+        from mvctools import AutoSprite
+        pp = pprint.PrettyPrinter(indent=4)
+        for s in gc.get_objects():
+            if isinstance(s, AutoSprite):
+                print s, len(gc.get_referrers(s))
 
     def pre_run(self):
         """Method to override.

@@ -1,6 +1,6 @@
 import pygame as pg
 from mvctools.sprite import AutoSprite
-from mvctools.common import cache, xytuple, from_parent
+from mvctools.common import cache_method, xytuple, from_parent
 from mvctools.sprite import ViewSprite
 from mvctools.view import BaseView
 from pygame import Color, Rect
@@ -39,8 +39,8 @@ class LineSprite(AutoSprite):
     # Background
     background = None
 
-    opacify = cache(opacify, static=True)
-    render =  cache(render,  static=True)
+    opacify = cache_method(opacify, static=True)
+    render =  cache_method(render,  static=True)
 
     def init(self, **kwargs):
         for key, value in kwargs.items():
@@ -123,7 +123,7 @@ class TextView(BaseView):
         for i in range(len(self.lines), nb_lines):
             self.lines.append(ChilrenLineSprite(self, i))
         for i in range(len(self.lines), nb_lines, -1):
-            self.lines.kill()
+            self.lines[-1].clear()
 
     def get_child_pos(self, lid):
         previous = self.lines[lid-1] if lid else None

@@ -89,6 +89,13 @@ class BaseView(object):
     def update(self):
         pass
 
+    def clear(self):
+        for sprite in self.sprite_dct.values():
+            sprite.clear()
+        for sprite in self.group:
+            sprite.clear()
+        self.sprite_dct.clear()
+
     def gen_sprites(self):
         for _, obj in self.model.get_model_dct():
             self.gen_sprite(obj)

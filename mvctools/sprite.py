@@ -47,8 +47,15 @@ class AutoSprite(DirtySprite):
 
     def kill(self):
         for child in self.children:
-            child.kill() 
+            child.kill()
+        self.group = None
         super(AutoSprite, self).kill()
+
+    def clear(self):
+        self.kill()
+        for child in self.children:
+            child.clear()
+        self.children = []
 
     def register_child(self, child):
         self.children.append(child)
@@ -65,7 +72,7 @@ class AutoSprite(DirtySprite):
 
     def get_rect(self):
         return self.rect
-    
+
     def get_image(self):
         return self.image
 
@@ -78,7 +85,7 @@ class AutoSprite(DirtySprite):
         self.dirty = self.dirty if self.dirty else 1
 
     # Conveniance methods
-    
+
     def build_animation(self, resource, timer=None,
                         inf=None, sup=None, looping=True, resize=False):
         if timer is None:
@@ -89,11 +96,11 @@ class AutoSprite(DirtySprite):
     def scale_resource(self, resource, name, size=None):
         size = self.size if size is None else None
         return resource.getfile(name, size)
-    
+
     @property
     def size(self):
         return xytuple(*self.image.get_size())
-            
+
     # Layer property
 
     @property
@@ -107,7 +114,7 @@ class AutoSprite(DirtySprite):
         if self._layer != layer:
             self._layer = layer
             self.group.change_layer(self, layer)
-            
+
     @layer.deleter
     def layer(self):
         self.set_layer(-1)
@@ -116,7 +123,7 @@ class AutoSprite(DirtySprite):
         layer = self.layer
         del self.layer
         self.layer = layer
-    
+
     # Image property
     @property
     def image(self):
@@ -178,7 +185,7 @@ class AutoSprite(DirtySprite):
 class ViewSprite(AutoSprite):
 
     view_cls = BaseView
-    
+
     def init(self, view_cls=None):
         if view_cls:
             self.view_cls = view_cls
@@ -206,7 +213,7 @@ class ViewSprite(AutoSprite):
         self.dirty_rects = dirty
         # Return
         return image
-        
+
     @property
     def screen_size(self):
         return self.view.screen_size
@@ -216,11 +223,17 @@ class ViewSprite(AutoSprite):
         return self.screen_size
 
     @property
-    def transparent(self):        
+    def transparent(self):
         return self.view.transparent
 
     def get_surface(self):
         return self.screen_size
+
+    def clear(self):
+        self.view.clear()
+        AutoSprite.clear(self)
+
+
 
 class Animation(object):
 
@@ -267,7 +280,7 @@ class Animation(object):
 
 class UpgradingMetaClass(type):
     def __new__(metacls, name, bases, attrs):
-        cls = type(name, bases, attrs)  
+        cls = type(name, bases, attrs)
         for name in dir(cls):
             attr = getattr(cls, name)
             if type(attr) in cls.upgrade_dict:
@@ -276,8 +289,8 @@ class UpgradingMetaClass(type):
                     func = func.__func__
                 setattr(cls, name, func(attr))
         return cls
-        
-    
+
+
 class Autorect(Rect):
 
     def __init__(self, *args, **kwargs):
@@ -291,7 +304,7 @@ class Autorect(Rect):
         self.sprites.append(sprite)
 
     __metaclass__ = UpgradingMetaClass
-    
+
     @staticmethod
     def upgrade_descriptor(descriptor):
         def setter(obj, value):

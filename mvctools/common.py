@@ -5,6 +5,7 @@ import operator
 from math import ceil
 from fractions import gcd
 from functools import wraps
+from weakref import WeakKeyDictionary
 from collections import namedtuple, defaultdict
 from pygame import Color, Rect
 
@@ -179,15 +180,28 @@ class cachedict(defaultdict):
 
 
 # Cache decorator
-def cache(func, static=False):
+def cache_method(func, static=False):
+    weak_dct = WeakKeyDictionary()
+    @wraps(func)
+    def wrapper(self, *args):
+        dct = weak_dct.setdefault(self, {})
+        if args not in dct:
+            f_args = args
+            if not static:
+                f_args = (self,) + args
+            dct[args] = func(*f_args)
+        return dct[args]
+    return wrapper
+
+# Cache decorator
+def cache(func):
     dct = {}
     @wraps(func)
     def wrapper(*args):
         if args not in dct:
-            dct[args] = func(*args[static:])
+            dct[args] = func(*args)
         return dct[args]
     return wrapper
-
 
 # From parent decorator
 def from_parent(lst):
