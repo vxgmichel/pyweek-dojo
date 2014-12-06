@@ -73,14 +73,15 @@ class RoomModel(BaseModel):
         player = self.players[player]
         player.load() if down else player.jump()
 
-    def register_start(self):
+    def register_start(self, down):
         """Register a reset from the controller."""
-        self.control.register_next_state(type(self.state))
-        return True
+        if down:
+            self.control.register_next_state(type(self.state))
+            return True
 
-    def register_escape(self):
+    def register_escape(self, down):
         """Register an escape from the controller."""
-        return True
+        return down
 
     def register_dir(self, player, direction):
         """Register a direction change from the controller."""

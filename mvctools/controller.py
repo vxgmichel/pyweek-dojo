@@ -300,7 +300,7 @@ class MappingController(BaseController):
             return
         # Generic action
         if player is None:
-            return self.model.register(action)
+            return self.model.register(action, down)
         # Player related action
         if action != self.dir_action:
             return self.model.register(action, player, down)
