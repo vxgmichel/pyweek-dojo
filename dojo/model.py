@@ -70,6 +70,8 @@ class RoomModel(BaseModel):
 
     def register_activate(self, player, down):
         """Register a jump from the controller."""
+        if self.colliding:
+            return
         player = self.players[player]
         player.load() if down else player.jump()
 
@@ -85,6 +87,8 @@ class RoomModel(BaseModel):
 
     def register_dir(self, player, direction):
         """Register a direction change from the controller."""
+        if self.colliding and self.players[player].fixed:
+            return
         self.players[player].register_dir(direction)
 
     def update_speed(self):
