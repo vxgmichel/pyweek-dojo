@@ -1,4 +1,4 @@
-"""Contain the controller for the main game state."""
+"""Provide the controller for the main game state."""
 
 # Imports
 from mvctools.utils import TwoPlayersController, PlayerAction

@@ -1,10 +1,11 @@
-"""Contain the model for the main game state."""
+"""Provide the model for the main game state."""
 
 # Imports
 from pygame import Rect, Color
 from mvctools import BaseModel, Dir, Timer, xytuple, from_gamedata
 from mvctools.utils.camera import CameraModel
 from dojo.common import perfect_collide
+
 
 # Dojo model
 class DojoModel(CameraModel):
@@ -17,7 +18,7 @@ class DojoModel(CameraModel):
     speed = 300 # pixel / s
 
     def init(self):
-        """Initialize camera."""
+        """Initialize camera and create the room model."""
         self.resource = self.control.resource
         self.size = self.resource.image.get(self.ref).get_size()
         self.room_rect = Rect((0,0), self.size)
@@ -25,6 +26,7 @@ class DojoModel(CameraModel):
         self.room = RoomModel(self, self.room_rect)
 
     def pause(self, pause, callback):
+        """Pause the game for a given time with a given callback."""
         self.room.time_speed, temp = 0, self.room.time_speed
         def target(timer):
             callback()
@@ -32,7 +34,7 @@ class DojoModel(CameraModel):
         Timer(self, stop=pause, callback=target).start()
 
     def register(self, *args, **kwargs):
-        # Forward actions
+        """Forward actions to the room model."""
         return self.room.register(*args, **kwargs)
 
 
@@ -43,7 +45,7 @@ class RoomModel(BaseModel):
     # Damping when two players collide
     damping = 0.8
 
-    # Pause when two players collide
+    # Pause when two players collide (with or without ko)
     pause_dct = {True: 1.0,
                  False: 0.5,}
 
@@ -66,6 +68,7 @@ class RoomModel(BaseModel):
 
     @from_gamedata
     def score_dct(self):
+        """Get the score from gamedata."""
         return {i:0 for i in (1,2)}
 
     def register_activate(self, player, down):
@@ -91,33 +94,6 @@ class RoomModel(BaseModel):
             return
         self.players[player].register_dir(direction)
 
-    def update_speed(self):
-        # Get distance
-        lst = [float("inf")]
-        for i in (1,2):
-            j = 2 if i==1 else 1
-            pos_1 = xytuple(*self.players[i].legs.center)
-            if not any(pos_1):
-                continue
-            pos_2 = xytuple(*self.players[j].head.center)
-            pos_3 = xytuple(*self.players[j].body.center)
-            lst.append(abs(pos_1-pos_2))
-            lst.append(abs(pos_1-pos_3))
-        # Set speed
-        if not self.colliding and min(lst) > float(self.threshold):
-            if self.time_speed: self.time_speed = 1.0
-            self.parent.reset_camera()
-        else:
-            if self.time_speed: self.time_speed = self.slow_ratio
-            new_zoom = not self.parent.is_camera_set
-            area = self.players[1].rect.union(self.players[2].rect)
-            center = area.center
-            area.h = max(area.h, self.rect.h/2)
-            area.w = max(area.w, self.rect.w/2)
-            area.center = center
-            self.parent.set_camera(area.clamp(self.rect))
-            return new_zoom
-
     def post_update(self):
         """Decompose players trajectory into steps."""
         maxi = max(len(self.players[pid].steps) for pid in (1,2)) - 1
@@ -130,9 +106,41 @@ class RoomModel(BaseModel):
                 break
 
     def update_step(self):
-        """Detect collision between the 2 players."""
+        """Update everything for the current step."""
         return self.update_speed() or self.update_hit() \
                or self.update_collision()
+
+    def update_speed(self):
+        """Update camera and game speed."""
+        # Get distance
+        lst = [float("inf")]
+        for i in (1,2):
+            j = 2 if i==1 else 1
+            pos_1 = xytuple(*self.players[i].legs.center)
+            if not any(pos_1):
+                continue
+            pos_2 = xytuple(*self.players[j].head.center)
+            pos_3 = xytuple(*self.players[j].body.center)
+            lst.append(abs(pos_1-pos_2))
+            lst.append(abs(pos_1-pos_3))
+        # Reset speed and camera
+        if not self.colliding and min(lst) > float(self.threshold):
+            if self.time_speed: self.time_speed = 1.0
+            self.parent.reset_camera()
+            return
+        # Set speed
+        if self.time_speed:
+            self.time_speed = self.slow_ratio
+        # Set camera
+        new_zoom = not self.parent.is_camera_set
+        area = self.players[1].rect.union(self.players[2].rect)
+        center = area.center
+        area.h = max(area.h, self.rect.h/2)
+        area.w = max(area.w, self.rect.w/2)
+        area.center = center
+        self.parent.set_camera(area.clamp(self.rect))
+        # Break the update if new zoom detected
+        return new_zoom
 
     def update_hit(self):
         """Test collision between players."""
@@ -167,17 +175,19 @@ class RoomModel(BaseModel):
             self.callback_data = hit
             pause = self.pause_dct[any(hit.values())]
             self.parent.pause(pause, self.callback)
+            # Break the update
             return True
         # Update flag
-        elif not collide:
+        if not collide:
             self.colliding = False
 
     def update_collision(self):
-        """Test collision against the wall"""
+        """Test collision against the wall."""
         for pid in (1,2):
             self.players[pid].update_collision()
 
     def callback(self):
+        """Callback to update the players when the pause is over."""
         hit = self.callback_data
         for i, j in ((1,2), (2,1)):
             if hit[i]:
@@ -186,18 +196,19 @@ class RoomModel(BaseModel):
             self.players[i].speed *= (-self.damping,)*2
 
 
-# Border modem
+# Border model
 class BorderModel(BaseModel):
     """Border model. Useful to detect collision."""
 
-    # Offset compare to the room size
+    # Offset applied on the room size
     offset = -14, -15
 
     def init(self):
         """Compute the border rectangle."""
         self.rect = self.parent.rect.inflate(*self.offset)
 
-# Rect
+
+# Rect model
 class RectModel(BaseModel):
     """Rectangle model for debug purposes."""
 
@@ -211,9 +222,10 @@ class RectModel(BaseModel):
         """Rectangle property."""
         return getattr(self.parent, self.attr)
 
+
 # Player model
 class PlayerModel(BaseModel):
-    """Player model. Most of the gameplay is handled here."""
+    """Player model. Most of the game physics is implemented here."""
 
     # Physics
     air_friction = 0.5, 0.5  # s-1
@@ -296,6 +308,7 @@ class PlayerModel(BaseModel):
             RectModel(self, "legs", Color("blue"))
 
     def register_dir(self, direction):
+        """Register a new direction from the controller."""
         if any(direction):
             self.save_dir = direction
         self.control_dir = direction
@@ -307,10 +320,12 @@ class PlayerModel(BaseModel):
 
     @property
     def loading(self):
+        """True when the player is loading a jump, False otherwise."""
         return self.loading_timer.is_set or not self.loading_timer.is_paused
 
     @property
     def loading_speed(self):
+        """The current loading speed value."""
         return self.loading_timer.get()
 
     def set_ko(self):
@@ -319,6 +334,7 @@ class PlayerModel(BaseModel):
         self.fixed = False
 
     def load(self):
+        """Register a load action."""
         self.delay_timer.reset().start()
         self.timer.set(self.period*0.9)
 
@@ -389,7 +405,6 @@ class PlayerModel(BaseModel):
         # Dynamic case
         return Dir.closest_dir(self.speed)
 
-
     def get_rect_from_dir(self, direction):
         """Compute a hitbox inside the player in a given direction."""
         size = xytuple(*self.size) * ((self.hitbox_ratio,)*2)
@@ -401,7 +416,7 @@ class PlayerModel(BaseModel):
 
     @property
     def head(self):
-        """Head hitbox."""
+        """Head hitbox. Currently not used."""
         if self.ko:
             return Rect(0,0,0,0)
         if self.fixed:
@@ -410,7 +425,7 @@ class PlayerModel(BaseModel):
 
     @property
     def body(self):
-        """Body hitbox."""
+        """Body hitbox. Currently not used."""
         if self.ko:
             return Rect(0,0,0,0)
         return self.get_rect_from_dir(Dir.NONE)
@@ -444,4 +459,3 @@ class PlayerModel(BaseModel):
             delta = self.load_factor_max - self.load_factor_min
             ratio = self.load_factor_min + self.loading_ratio * delta
             self.timer.start(ratio)
-

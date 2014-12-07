@@ -1,5 +1,6 @@
 
 import pygame, gc
+from collections import deque
 from mvctools.model import BaseModel
 from mvctools.controller import BaseController
 from mvctools.view import BaseView
@@ -82,6 +83,7 @@ class BaseState(object):
         if self.control.settings.display_fps:
             string = self.control.window_title + "   FPS = {:3}"
         # Init time
+        queue = deque(maxlen=3)
         clock = self.clock_class()
         # Freeze current fps for the first two ticks
         self.current_fps = limit_fps
@@ -103,8 +105,11 @@ class BaseState(object):
             millisec = clock.tick(tick)
             # Update current FPS
             if millisec:
-                self.current_fps = 1000.0/millisec
-                self.current_fps /= debug_speed
+                queue.append(1000.0/millisec)
+                queue[-1] /= debug_speed
+                # Median filter of size 3
+                new_fps = sorted(queue)[len(queue)//2]
+                self.current_fps = new_fps
             # Update window caption
             rate = clock.get_fps()
             if rate and string:

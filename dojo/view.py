@@ -1,4 +1,4 @@
-"""Contain the view for the main game state."""
+"""Provide the view for the main game state."""
 
 # Imports
 from collections import defaultdict
@@ -14,10 +14,12 @@ from mvctools.utils import CameraSprite
 
 # Dojo imports
 from dojo.model import PlayerModel, RectModel, RoomModel
+from dojo.common import opacify_ip, flash
 
 
 # Settings for text sprites
 class WhiteTextSprite(TextSprite):
+    """Apply new settings for the text sprites."""
 
     # Font settings
     font_name = "visitor2"
@@ -46,6 +48,7 @@ class RoomSprite(AutoSprite):
         ResetSprite(self, text=self.reset_string)
         TitleSprite(self)
 
+
 # Title sprite
 class TitleSprite(WhiteTextSprite):
     """Title line."""
@@ -55,11 +58,13 @@ class TitleSprite(WhiteTextSprite):
 
     @property
     def pos(self):
+        """Position for the center of the title."""
         size = xytuple(*self.model.rect.bottomright)
         return size * self.relative_pos
 
     @property
     def text(self):
+        """Text from the model."""
         return self.model.text
 
 
@@ -73,8 +78,10 @@ class ResetSprite(WhiteTextSprite):
 
     @property
     def pos(self):
+        """Position for the center of the reset text."""
         size = xytuple(*self.model.rect.bottomright)
         return size * self.relative_pos
+
 
 # Score sprite
 class ScoreSprite(WhiteTextSprite):
@@ -86,11 +93,13 @@ class ScoreSprite(WhiteTextSprite):
 
     @property
     def pos(self):
+        """Position for the center of the score panels."""
         size = xytuple(*self.model.rect.bottomright)
         return size * self.pos_dct[self.player]
 
     @property
     def text(self):
+        """Text from the model."""
         return "{:02}".format(self.model.score_dct[self.player])
 
 
@@ -105,14 +114,9 @@ class ControlSprite(WhiteTextSprite):
 
     @property
     def pos(self):
+        """Position for the center of the control panels."""
         size = xytuple(*self.model.rect.bottomright)
         return size * self.pos_dct[self.player]
-
-
-def opacify_ip(surface, opacity):
-    if opacity < 1:
-        color = 255, 255, 255, int(255 * opacity)
-        surface.fill(color, special_flags=pg.BLEND_RGBA_MULT)
 
 
 # Aura sprite
@@ -133,10 +137,12 @@ class AuraSprite(AutoSprite):
         self.layer = self.parent.layer + 10
 
     def get_image(self):
+        """Get corresponding image if the player stand up."""
         if self.model.fixed and not self.model.ko:
             return self.resource_dct[self.model.current_dir]
 
     def get_rect(self):
+        """Get the corresponding rectangle."""
         attr = Dir.DIR_TO_ATTR[self.model.current_dir]
         center = getattr(self.model.rect, attr)
         return self.image.get_rect(center=center)
@@ -158,14 +164,6 @@ class AuraSprite(AutoSprite):
         # Return
         return dct
 
-# Flash function
-def flash(image, black):
-    result = image.copy()
-    delta = 64 if black else 32
-    color = (delta, delta, delta*2, 0)
-    flag = pg.BLEND_RGBA_SUB if black else pg.BLEND_RGBA_ADD
-    result.fill(color, special_flags=flag)
-    return result
 
 # Player sprite
 class PlayerSprite(AutoSprite):
@@ -191,6 +189,8 @@ class PlayerSprite(AutoSprite):
                   2: "jumping/perp_player_2",}
     diag_names = {1: "jumping/diag_player_1",
                   2: "jumping/diag_player_2",}
+
+    # Directions
 
     perp_dir = [Dir.UP, Dir.LEFT, Dir.DOWN, Dir.RIGHT]
     diag_dir = [Dir.UPRIGHT, Dir.UPLEFT, Dir.DOWNLEFT, Dir.DOWNRIGHT]
@@ -264,7 +264,7 @@ class PlayerSprite(AutoSprite):
                                for img in resource]
                     for l in range(2):
                         if l:
-                            lst = [flash(image, i/2) for i, image in enumerate(lst)]
+                            lst = [flash(image, not i/2) for i, image in enumerate(lst)]
                         dct[h,v,r,l] = self.build_animation(lst, timer=timer)
         return dct
 
@@ -294,6 +294,7 @@ class RectSprite(AutoSprite):
 class StaticDojoView(BaseView):
     """Dojo view without the camera move."""
 
+    # Settings
     bgd_image = "image/room"
     transparent = False
 
@@ -311,11 +312,11 @@ class StaticDojoView(BaseView):
 class DojoView(BaseView):
     """Dojo view for the game state."""
 
+    # Settings
     subview = StaticDojoView
     transparent = False
     size = 640, 360
 
     def init(self):
+        """Create the camera sprite."""
         self.camera = CameraSprite(self, self.subview)
-
-
