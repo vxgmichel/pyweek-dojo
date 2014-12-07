@@ -62,6 +62,9 @@ class xytuple(namedtuple("xytuple",("x","y"))):
 
 # Direction enumeration
 class Dir:
+
+    # Directions
+
     NONE = xytuple(0,0)
     UP = xytuple(0,-1)
     DOWN = xytuple(0,+1)
@@ -71,6 +74,78 @@ class Dir:
     UPRIGHT = UP + RIGHT
     DOWNLEFT = DOWN + LEFT
     DOWNRIGHT = DOWN + RIGHT
+
+    #: Direction to Rect attribute
+    DIR_TO_ATTR = {NONE: "center",
+                   UP: "midtop",
+                   DOWN: "midbottom",
+                   LEFT: "midleft",
+                   RIGHT: "midright",
+                   UPLEFT: "topleft",
+                   UPRIGHT: "topright",
+                   DOWNLEFT: "bottomleft",
+                   DOWNRIGHT: "bottomright",}
+
+    #: Rect attribute to direction
+    ATTR_TO_DIR = dict(map(reversed, DIR_TO_ATTR.items()))
+
+    #: List of all directions
+    DIRS = [xytuple(x,y) for x in range(-1,2) for y in range(-1,2)]
+
+    #: List of all normalized directions
+    NORMALIZED_DIRS = [direct/(2*(abs(direct),))
+                       for direct in DIRS if any(direct)]
+
+    # Class methods
+
+    @classmethod
+    def closest_dir(cls, vector, normalized=True, include_none=False):
+        """Return the closest dir to a given vector.
+
+        By default, the normalized directions are used to check
+        the distances, but a standard direction is always returned.
+
+        By default, the NONE direction is excluded from the results.
+        """
+        dirs = cls.NORMALIZED_DIRS if normalized else cls.DIRS
+        _, direct = min((abs(direct - vector), direct) for direct in dirs
+                        if include_none or any(direct))
+        if not normalized:
+            return direct
+        return direct.map(round).map(int)
+
+    # Class generators
+
+    @classmethod
+    def generate_steps(cls, old, new):
+        """Generate all the directions to go from one position
+        to another.
+        """
+        new, current = xytuple(new), xytuple(old)
+        while current != new:
+            step = cls.closest_dir(new - current)
+            current += step
+            yield step, current
+
+    @classmethod
+    def generate_positions(cls, old, new):
+        """Generate all the intermediate position to go from
+        one position to another. They're both included.
+        """
+        yield xytuple(old)
+        for step, current in cls.generate_steps(old, new):
+            yield current
+
+    @classmethod
+    def generate_rects(cls, old, new):
+        """Generate all the intermediate rectangles to go from
+        one rectangle to another. They're both included.
+        However, all rectangles have the first rectangle size.
+        """
+        for position in cls.generate_positions(old.center, new.center):
+            copy = old.copy()
+            copy.center = position
+            yield copy
 
 
 # Cursored list

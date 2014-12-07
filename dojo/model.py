@@ -2,9 +2,9 @@
 
 # Imports
 from pygame import Rect, Color
-from mvctools import BaseModel, xytuple, Timer, from_gamedata
+from mvctools import BaseModel, Dir, Timer, xytuple, from_gamedata
 from mvctools.utils.camera import CameraModel
-from dojo.common import Dir, closest_dir, generate_steps, perfect_collide
+from dojo.common import perfect_collide
 
 # Dojo model
 class DojoModel(CameraModel):
@@ -387,7 +387,7 @@ class PlayerModel(BaseModel):
             sign = lambda arg: cmp(arg, 0)
             return current_dir.map(sign)
         # Dynamic case
-        return closest_dir(self.speed, normalized=True)
+        return Dir.closest_dir(self.speed)
 
 
     def get_rect_from_dir(self, direction):
@@ -438,7 +438,7 @@ class PlayerModel(BaseModel):
         self.remainder = step - intstep
         # Register steps
         args = Rect(self.rect), self.rect.move(intstep)
-        self.steps = generate_steps(*args)
+        self.steps = list(Dir.generate_rects(*args))
         # Update timer
         if self.loading:
             delta = self.load_factor_max - self.load_factor_min

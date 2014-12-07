@@ -16,6 +16,7 @@ class DojoState(BaseState):
     model_class = DojoModel
     view_class = DojoView
 
+
 # Create the main control
 class Dojo(BaseControl):
     """
@@ -29,16 +30,17 @@ class Dojo(BaseControl):
     window_title = "Dojo"
     first_state = DojoState
     resource_dir = "resource"
-    version = "1.3.0"
+    version = "1.2.0"
 
     def pre_run(self) :
         """Hide the mouse"""
         super(Dojo, self).pre_run()
         pygame.mouse.set_visible(False)
 
+
 # Main function
 def main():
     dojo = Dojo()
-    # Uncomment to display all settings in help
+    # Uncomment to display debug settings in help
     # dojo.settings.arg_lst = None
     dojo.main()

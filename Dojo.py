@@ -1,2 +1,3 @@
 #!/usr/bin/env python
-from dojo import __main__
+from dojo import main
+main()

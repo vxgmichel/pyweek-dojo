@@ -8,13 +8,12 @@ import pygame as pg
 from pygame import Rect, Surface, transform, draw, Color
 
 # MVC tools imports
-from mvctools import BaseView, AutoSprite, xytuple
+from mvctools import BaseView, AutoSprite, Dir, xytuple
 from mvctools.utils import TextSprite
 from mvctools.utils import CameraSprite
 
 # Dojo imports
 from dojo.model import PlayerModel, RectModel, RoomModel
-from dojo.common import Dir, DIR_TO_ATTR
 
 
 # Settings for text sprites
@@ -138,7 +137,7 @@ class AuraSprite(AutoSprite):
             return self.resource_dct[self.model.current_dir]
 
     def get_rect(self):
-        attr = DIR_TO_ATTR[self.model.current_dir]
+        attr = Dir.DIR_TO_ATTR[self.model.current_dir]
         center = getattr(self.model.rect, attr)
         return self.image.get_rect(center=center)
 
