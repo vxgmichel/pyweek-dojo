@@ -5,6 +5,7 @@ from pygame import Rect, Color
 from mvctools import BaseModel, Dir, Timer, xytuple, from_gamedata
 from mvctools.utils.camera import CameraModel
 from dojo.common import perfect_collide
+from dojo.pause import PauseState
 
 
 # Dojo model
@@ -71,7 +72,7 @@ class RoomModel(BaseModel):
         """Get the score from gamedata."""
         return {i:0 for i in (1,2)}
 
-    def register_activate(self, player, down):
+    def register_activate(self, down, player):
         """Register a jump from the controller."""
         if self.colliding:
             return
@@ -86,9 +87,12 @@ class RoomModel(BaseModel):
 
     def register_escape(self, down):
         """Register an escape from the controller."""
-        return down
+        if down:
+            self.control.push_current_state()
+            self.control.register_next_state(PauseState)
+            return True
 
-    def register_dir(self, player, direction):
+    def register_dir(self, direction, player):
         """Register a direction change from the controller."""
         if self.colliding and self.players[player].fixed:
             return

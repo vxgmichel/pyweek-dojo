@@ -15,6 +15,10 @@ class DojoController(TwoPlayersController):
     # Allow loading jump after a reset
     special_actions = [PlayerAction.ACTIVATE]
 
-    # Add reset on Y button
+    # Remapping
     button_dct = dict(TwoPlayersController.button_dct)
+    # Add reset on Y and Select buttons
     button_dct[3] = PlayerAction.START, False
+    button_dct[6] = PlayerAction.START, False
+    # Add escape on Start button
+    button_dct[7] = PlayerAction.ESCAPE, False

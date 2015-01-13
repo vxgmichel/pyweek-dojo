@@ -234,7 +234,7 @@ class MappingController(BaseController):
                    self.get_hat_direction(player)]
             iterator = (direction for direction in lst if any(direction))
             direction = next(iterator, xytuple(0,0))
-            self.register(self.dir_action, player, direction)
+            self.register(self.dir_action, direction, player)
         # Special keys
         dct = pg.key.get_pressed()
         special_keys = (key for key, value in self.key_dct.items()
@@ -303,15 +303,15 @@ class MappingController(BaseController):
             return self.model.register(action, down)
         # Player related action
         if action != self.dir_action:
-            return self.model.register(action, player, down)
+            return self.model.register(action, down, player)
         # Direction action
         direction = self.get_key_direction(player)
-        return self.register(action, player, direction)
+        return self.register(action, direction, player)
 
     def register_hat(self, player):
         """Register a hat event."""
         direction = self.get_hat_direction(player)
-        return self.register(self.dir_action, player, direction)
+        return self.register(self.dir_action, direction, player)
 
     def register_button(self, button, player, down):
         """Register a button event."""
@@ -323,11 +323,9 @@ class MappingController(BaseController):
         if not as_player:
             return self.model.register(action, down)
         # Player related action
-        return self.model.register(action, player, down)
+        return self.model.register(action, down, player)
 
     def register_axis(self, player):
         """Register an axis event."""
         direction = self.get_axis_direction(player)
-        return self.register(self.dir_action, player, direction)
-
-
+        return self.register(self.dir_action, direction, player)

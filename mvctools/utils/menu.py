@@ -9,10 +9,11 @@ import pygame as pg
 # Entry model
 
 class EntryModel(BaseModel):
-    
-    def init(self, pos, text):
+
+    def init(self, pos, text, callback=None):
         self.text = text
         self.pos = pos
+        self.callback = callback
 
     @property
     def selected(self):
@@ -22,7 +23,8 @@ class EntryModel(BaseModel):
         self.parent.cursor.cursor = self.pos
 
     def activate(self):
-        pass
+        if callable(self.callback):
+            return self.callback()
 
     def shift(self, shift):
         pass
@@ -32,7 +34,7 @@ class EntryModel(BaseModel):
 
     def register_click(self):
         self.activate()
-        
+
 
 # Main Model
 
@@ -53,15 +55,25 @@ class MenuModel(BaseModel):
 
     def register_dir(self, direct, player=None):
         x,y = direct
-        self.cursor.inc(x)
-        self.cursor.get.shift(y)
+        self.cursor.inc(y)
+        self.cursor.get().shift(x)
 
-    def register_activate(self):
-        self.cursor.get().activate()
+    def register_start(self, down):
+        return self.register_activate(down)
+
+    def register_select(self, down):
+        self.cursor.inc(down)
+
+    def register_escape(self, down):
+        return down
+
+    def register_activate(self, down, player=None):
+        if down:
+            return self.cursor.get().activate()
 
     def register_back(self):
         self.cursor[-1].activate()
-        
+
 # Entry sprite
 
 @from_parent(["font_sizes", "font_name", "antialias",
@@ -90,13 +102,13 @@ class EntrySprite(LineSprite):
     @property
     def pos(self):
         return self.parent.get_child_pos(self.model.pos)
-    
+
 # Entry View
 
 class MenuView(BaseView):
 
     sprite_class_dct = {EntryModel: EntrySprite}
-    
+
     # Font
     font_sizes = 0, 0
     font_name = ""
@@ -108,7 +120,7 @@ class MenuView(BaseView):
     alignment = "left"
     # Margins
     margins = 0,0
-    
+
     def update(self):
         self.rect_dict = {}
         # Get rects
@@ -140,7 +152,7 @@ class MenuView(BaseView):
             return getattr(self.rect_dict[pos], self.reference)
         except KeyError:
             return 0, 0
-    
+
     @property
     def size(self):
         try:
@@ -173,7 +185,7 @@ class MenuSprite(ViewSprite):
     alignment = "left"
     # Margin
     margins = 0, 0
-    
+
 
     # View
     view_cls = ChildrenMenuView
@@ -186,5 +198,3 @@ class MenuSprite(ViewSprite):
     def get_rect(self):
         kwargs = {self.reference: self.pos}
         return self.image.get_rect(**kwargs)
-
-
