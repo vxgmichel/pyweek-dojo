@@ -141,14 +141,9 @@ class BaseModel(object):
             for value in child.gen_model_dct():
                 yield value
 
-    def get_model_dct(self):
-        """Recursively get the dictionnary of all models with
-        their associated key (including itself).
-
-        Return:
-            dict: the (key, model) dictionnary
-        """
-        return dict(self.gen_model_dct())
+    def get_children(self):
+        """Return the list of the current children model."""
+        return self.children.values()
 
     def get_image(self):
         """Get the current image.

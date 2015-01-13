@@ -7,6 +7,8 @@ from mvctools import BaseView
 
 class AutoSprite(DirtySprite):
 
+    has_view = False
+
     def __init__(self, parent, *args, **kwargs):
         super(AutoSprite, self).__init__()
         # Model default kwarg
@@ -102,6 +104,18 @@ class AutoSprite(DirtySprite):
     def size(self):
         return xytuple(*self.image.get_size())
 
+    @property
+    def screen_size(self):
+        return self.parent.screen_size
+
+    @property
+    def screen_width(self):
+        return self.parent.screen_width
+
+    @property
+    def screen_height(self):
+        return self.parent.screen_height
+
     # Layer property
 
     @property
@@ -126,6 +140,7 @@ class AutoSprite(DirtySprite):
         self.layer = layer
 
     # Image property
+    
     @property
     def image(self):
         return self._image
@@ -186,6 +201,7 @@ class AutoSprite(DirtySprite):
 class ViewSprite(AutoSprite):
 
     view_cls = BaseView
+    has_view = True
 
     def init(self, view_cls=None):
         if view_cls:
@@ -194,14 +210,18 @@ class ViewSprite(AutoSprite):
 
     def transform(self, screen, dirty):
         screen_size = screen.get_size()
+        # No scaling needed
         if screen_size == self.size:
             return screen, dirty
+        # Scalable screen
         if all(screen.get_size()):
+            # Scale all
             if self.image.get_size() != self.size:
-                return self.resource.scale(screen, self.size), None
-            dirty = scale_dirty(screen, self.image, dirty,
-                                self.resource.scale)
+                self.image = Surface(self.size, screen.get_flags())
+            # Scale dirty
+            dirty = scale_dirty(screen, self.image, dirty)
             return self.image, dirty
+        # Not scalable screen
         image = Surface(self.size, screen.get_flags())
         return image, None
 
@@ -215,24 +235,30 @@ class ViewSprite(AutoSprite):
         # Return
         return image
 
-    @property
-    def screen_size(self):
-        return self.view.screen_size
+    def convert_position(self, pos):
+        new_pos = xytuple(pos) - self.rect.topleft
+        new_pos *= self.view.screen_size
+        return new_pos / self.size
+
+    def gen_sprites_at(self, pos):
+        pos = self.convert_position(pos).map(round)
+        return self.view.gen_sprites_at(pos)
 
     @property
     def size(self):
-        return self.screen_size
+        return self.view.screen_size
 
     @property
     def transparent(self):
         return self.view.transparent
 
     def get_surface(self):
-        return self.screen_size
+        msg = "no size or surface to provide"
+        raise NotImplementedError(msg)
 
-    def clear(self):
-        self.view.clear()
-        AutoSprite.clear(self)
+    def delete(self):
+        self.view.delete()
+        AutoSprite.delete(self)
 
 
 

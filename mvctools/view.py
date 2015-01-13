@@ -46,14 +46,14 @@ class BaseView(object):
 
     def update_screen(self, force=False):
         if force or self.screen is None:
-            self.screen = self.get_screen()
-            self.background = self.get_background()
+            self.screen = self.create_screen()
+            self.background = self.create_background()
             self.group.reset_update()
 
     def reset_screen(self):
         self.screen = None
 
-    def get_screen(self):
+    def create_screen(self):
         size = self.size
         if size is None:
             data = self.parent.get_surface()
@@ -64,17 +64,17 @@ class BaseView(object):
             return Surface(size)
         return Surface(size, pg.SRCALPHA)
 
-    def get_background(self):
+    def create_background(self):
         image = self.resource.get(self.bgd_image) if self.bgd_image else None
-        return self.build_background(image, self.bgd_color, self.size,
-                                     self.transparent)
+        return self.build_background(image, self.bgd_color, self.screen_size,
+                                     self.transparent, self.resource.scale)
 
     def _update(self):
         # Create screen
         self.update_screen()
         # Update
-        self.update()
         self.update_sprites()
+        self.update()
         self.group.update()
         # Changes on a transparent background
         if self.screen and self.screen_size != self.screen.get_size():
@@ -98,51 +98,86 @@ class BaseView(object):
         self.parent = None
 
     def update_sprites(self):
-        dct = self.model.get_model_dct()
-        removed = set(self.sprite_dct).difference(dct)
+        keys = self.recursive_creation(self.model)
+        removed = set(self.sprite_dct).difference(keys)
         for key in removed:
-            sprite = self.sprite_dct.pop(key)
-            sprite.delete()
-        for obj in dct.values():
-            self.gen_sprite(obj)
+            self.delete_sprite(key)
 
-    def gen_sprite(self, obj):
+    def recursive_creation(self, model):
+        sprite = self.create_sprite(model)
+        keys = [model.key]
+        for child in model.get_children():
+            keys.extend(self.recursive_creation(child))
+        return keys
+
+    def create_sprite(self, obj):
         if obj.key not in self.sprite_dct:
-            cls = self.sprite_class_dct.get(obj.__class__, None)
-            if cls:
-                self.sprite_dct[obj.key] = cls(self, model=obj)
+            try:
+                cls = next(self.sprite_class_dct[cls]
+                               for cls in self.sprite_class_dct
+                                   if isinstance(obj, cls))
+            except StopIteration:
+                return
+            self.sprite_dct[obj.key] = cls(self, model=obj)
+        return self.sprite_dct[obj.key]
+
+    def delete_sprite(self, key):
+        sprite = self.sprite_dct.pop(key, None)
+        if sprite:
+            sprite.delete()
 
     @classmethod
     def register_sprite_class(cls, obj_cls, sprite_cls):
         cls.sprite_class_dct[obj_cls] = sprite_cls
 
+    def gen_sprites_at(self, pos):
+        for sprite in reversed(self.group.get_sprites_at(pos)):
+            if sprite.has_view:
+                for sub in sprite.gen_sprites_at(pos):
+                    yield sub
+            yield sprite
+
     def get_models_at(self, pos):
-        return [sprite.model
-                for sprite in reversed(self.group.get_sprites_at(pos))]
+        models = []
+        for sprite in self.gen_sprites_at(pos):
+            if sprite.model not in models:
+                models.append(sprite.model)
+        return models
+
 
     def get_sprite_from(self, model):
-        self.gen_sprite(model)
-        if model.key in self.sprite_dct:
-            return self.sprite_dct[model.key]
+        sprite = self.create_sprite(model)
+        if sprite:
+            return sprite
         gen_results = (sprite.view.get_sprite_from(model)
                            for sprite in self.group
-                               if hasattr(sprite, "view"))
+                               if sprite.has_view)
         gen_filtered = (result for result in gen_results if result)
         return next(gen_filtered, None)
 
     @property
     def screen_size(self):
         if self.size is None:
-            return self.screen.get_size()
-        return self.size
+            return xytuple(self.screen.get_size())
+        return xytuple(self.size)
+
+    @property
+    def screen_width(self):
+        return self.screen_size.x
+
+    @property
+    def screen_height(self):
+        return self.screen_size.y
 
     @property
     def transparent(self):
         return self.bgd_color is None or Color(self.bgd_color)[3] != 255
 
-    def build_background(self, image=None, color=None, size=None, transparent=False):
+    @staticmethod
+    def build_background(image=None, color=None, size=None,
+                         transparent=False, scale=None):
         # No background
-        if image is None and color is None:
+        if size is None or image is None and color is None:
             return None
         # Get base
         if transparent:
@@ -154,8 +189,8 @@ class BaseView(object):
             color = Color(color)
             bgd.fill(color)
         # Blit image
-        if image is not None:
-            scaled = self.resource.scale(image, self.size)
+        if image is not None and scale is not None:
+            scaled = scale(image, size)
             bgd.blit(scaled, scaled.get_rect())
         return bgd
 
@@ -270,18 +305,17 @@ class PatchedLayeredDirty(LayeredDirty):
         old_rect_dct = self.spritedict
         use_update = self._use_update
         # Intersection
-        if use_update and 1 > sprite.dirty and sprite.visible:
+        if use_update and sprite.visible:
             for idx in new_rect.collidelistall(rect_lst):
                 rect_clip = new_rect.clip(rect_lst[idx])
                 area = rect_clip.move((-new_rect[0], -new_rect[1]))
                 surface.blit(sprite.image, rect_clip, area, sprite.blendmode)
         # Dirty sprite
         elif sprite.visible:
-            for area in sprite.dirty_rects:
-                dest = sprite.rect.move(area.topleft)
-                if sprite.source_rect:
-                    area.move_ip(sprite.source_rect.topleft)
-                surface.blit(sprite.image, dest, area, sprite.blendmode)
+            area = None
+            if sprite.source_rect:
+                area = Rect(sprite.source_rect.topleft, new_rect.size)
+            surface.blit(sprite.image, new_rect, area, sprite.blendmode)
         # Reset
         sprite.dirty = 0 if sprite.dirty < 2 else 2
         sprite.dirty_rects = None
