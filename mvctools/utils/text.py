@@ -122,7 +122,8 @@ class TextView(BaseView):
         for i in range(len(self.lines), nb_lines):
             self.lines.append(ChilrenLineSprite(self, i))
         for i in range(len(self.lines), nb_lines, -1):
-            self.lines[-1].clear()
+            self.lines[-1].delete()
+            del self.lines[-1]
 
     def get_child_pos(self, lid):
         previous = self.lines[lid-1] if lid else None

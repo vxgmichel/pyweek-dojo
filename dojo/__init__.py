@@ -2,20 +2,8 @@
 
 # Imports
 import os, pygame, dojo
-from mvctools import BaseControl, BaseState
-from dojo.model import DojoModel
-from dojo.view import DojoView
-from dojo.controller import DojoController
-
-
-# Create the main game state
-class DojoState(BaseState):
-    """Dojo main game state."""
-
-    controller_class = DojoController
-    model_class = DojoModel
-    view_class = DojoView
-
+from mvctools import BaseControl
+from dojo.state import DemoState
 
 # Create the main control
 class Dojo(BaseControl):
@@ -28,7 +16,7 @@ class Dojo(BaseControl):
     """
 
     window_title = "Dojo"
-    first_state = DojoState
+    first_state = DemoState
     resource_dir = "resource"
     version = "1.3.1"
 

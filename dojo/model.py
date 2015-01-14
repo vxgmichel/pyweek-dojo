@@ -78,8 +78,6 @@ class RoomModel(BaseModel):
 
     def register_activate(self, down, player):
         """Register a jump from the controller."""
-        if self.colliding:
-            return
         player = self.players[player]
         if down:
             player.load()
@@ -200,9 +198,9 @@ class RoomModel(BaseModel):
         # Bouncing
         p1, p2 = self.players[1], self.players[2]
         if p1.fixed:
-            p2.speed *= (-1,) * 2
+            p2.speed *= (-self.damping,) * 2
         elif p2.fixed:
-            p1.speed *= (-1,) * 2
+            p1.speed *= (-self.damping,) * 2
         else:
             p1.speed, p2.speed = p2.speed, p1.speed
         # Callback
@@ -211,7 +209,6 @@ class RoomModel(BaseModel):
             if hit[i]:
                 self.players[j].set_ko()
                 self.players[j].blinking_timer.reset()
-            self.players[i].speed *= (self.damping,) * 2
 
 
 # Border model
@@ -363,6 +360,8 @@ class PlayerModel(BaseModel):
 
     def load(self):
         """Register a load action."""
+        if self.colliding:
+            return
         self.delay_timer.reset().start()
         self.timer.set(self.period*0.9)
 
@@ -373,6 +372,8 @@ class PlayerModel(BaseModel):
 
     def jump(self):
         """Make the player jump."""
+        if self.colliding:
+            return
         # Check conditions
         if self.fixed and not self.ko:
             dir_coef = self.current_dir
