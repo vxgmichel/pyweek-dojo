@@ -76,7 +76,8 @@ class ResetSprite(WhiteTextSprite):
     # Settings
     font_size = 12
     relative_pos = 0.5, 0.52
-    text_dict = ["", "REMATCH:U"]
+    alignment = "center"
+    text_dict = ["JUMP!", "REMATCH\n-U-"]
 
     @property
     def text(self):

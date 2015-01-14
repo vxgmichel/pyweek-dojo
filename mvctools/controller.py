@@ -233,9 +233,11 @@ class MappingController(BaseController):
     #: Action that requires update on first frame
     special_actions = []
 
+    # Save last action argument
+    arg_dict = {}
+
     def init(self):
         """Initialize the joysticks."""
-        self.lastdir = None, None
         # Init joystick
         pg.joystick.quit()
         pg.joystick.init()
@@ -256,18 +258,18 @@ class MappingController(BaseController):
             iterator = (direction for direction in lst if any(direction))
             direction = next(iterator, xytuple(0,0))
             if self.dir_action in self.special_actions:
-                self.register(self.dir_action, direction, player)
+                self.register(self.dir_action, direction, player, False)
             if self.hdir_action in self.special_actions:
-                self.register(self.hdir_action, direction.x, player)
+                self.register(self.hdir_action, direction.x, player, False)
             if self.dir_action in self.special_actions:
-                self.register(self.vdir_action, direction.y, player)
+                self.register(self.vdir_action, direction.y, player, False)
         # Special keys
         dct = pg.key.get_pressed()
         special_keys = (key for key, value in self.key_dct.items()
                         if value[0] in self.special_actions)
         for key in special_keys:
             if dct[key]:
-                self.register_key(key, dct[key])
+                self.register_key(key, dct[key], filter=False)
 
     def handle_event(self, event):
         """Process the different type of events."""
@@ -318,6 +320,15 @@ class MappingController(BaseController):
             return self.dir_action, self.dir_dct[key][1]
         return self.key_dct.get(key, (None, None))
 
+    def register(self, action, arg, player=None, check=True):
+        """Check for double calls before registering an action."""
+        if not check or arg != self.arg_dict.get((action, player)):
+            self.arg_dict[action, player] = arg
+            args = (self, action, arg)
+            if player is not None:
+                args += (player,)
+            return BaseController.register(*args)
+
     def register_key(self, key, down):
         """Register a key strike."""
         action, player = self.get_key_action(key)
@@ -346,11 +357,10 @@ class MappingController(BaseController):
 
     def register_directions(self, direction, player):
         """Register direction changes."""
-        return self.register_dir(direction, player) or \
-               self.register_hdir(direction.x, player) or \
-               self.register_vdir(direction.y, player)
+        return self.register(self.dir_action, direction, player) or \
+               self.register(self.hdir_action, direction.x, player) or \
+               self.register(self.vdir_action, direction.y, player)
 
-    @filter_double_method_call
     def register_button(self, button, player, down):
         """Register a button event."""
         action, as_player = self.button_dct.get(button, (None,None))
@@ -362,19 +372,3 @@ class MappingController(BaseController):
             return self.model.register(action, down)
         # Player related action
         return self.model.register(action, down, player)
-
-    @filter_double_method_call
-    def register_dir(self, direc, player):
-        return self.register(self.dir_action, direc, player)
-
-    @filter_double_method_call
-    def register_hdir(self, x, player):
-        return self.register(self.hdir_action, x, player)
-
-    @filter_double_method_call
-    def register_vdir(self, y, player):
-        return self.register(self.vdir_action, y, player)
-
-               
-
-        
