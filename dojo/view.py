@@ -145,7 +145,7 @@ class AuraSprite(AutoSprite):
 
     def get_image(self):
         """Get corresponding image if the player stand up."""
-        if self.model.fixed and not self.model.ko:
+        if self.model.fixed and not self.model.ko and not self.model.colliding:
             return self.resource_dct[self.model.current_dir]
 
     def get_rect(self):

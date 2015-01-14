@@ -81,7 +81,10 @@ class RoomModel(BaseModel):
         if self.colliding:
             return
         player = self.players[player]
-        player.load() if down else player.jump()
+        if down:
+            player.load()
+        elif player.prepared:
+            player.jump()
 
     def register_start(self, down):
         """Register a reset from the controller."""
@@ -98,8 +101,6 @@ class RoomModel(BaseModel):
 
     def register_dir(self, direction, player):
         """Register a direction change from the controller."""
-        if self.colliding and self.players[player].fixed:
-            return
         self.players[player].register_dir(direction)
 
     def post_update(self):
@@ -210,7 +211,7 @@ class RoomModel(BaseModel):
             if hit[i]:
                 self.players[j].set_ko()
                 self.players[j].blinking_timer.reset()
-            self.players[i].speed *= (self.damping,) * 2      
+            self.players[i].speed *= (self.damping,) * 2
 
 
 # Border model
@@ -336,9 +337,19 @@ class PlayerModel(BaseModel):
         return xytuple(self.delta, self.delta)
 
     @property
+    def colliding(self):
+        """True when colliding with the other player, False otherwise."""
+        return self.parent.colliding
+
+    @property
     def loading(self):
         """True when the player is loading a jump, False otherwise."""
         return self.loading_timer.is_set or not self.loading_timer.is_paused
+
+    @property
+    def prepared(self):
+        """True when the player is prepared a jump, False otherwise."""
+        return self.loading or not self.delay_timer.is_paused
 
     @property
     def loading_speed(self):

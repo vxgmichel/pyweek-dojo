@@ -13,7 +13,7 @@ class DojoController(TwoPlayersController):
     """
 
     # Allow loading jump or picking a direction after a reset
-    special_actions = [PlayerAction.ACTIVATE, PlayerAction.DIR]
+    special_actions = [PlayerAction.DIR]
 
     # Remapping
     button_dct = dict(TwoPlayersController.button_dct)
