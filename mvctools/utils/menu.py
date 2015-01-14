@@ -53,10 +53,11 @@ class MenuModel(BaseModel):
         args = (pos,) + data[1:]
         return model(self, *args)
 
-    def register_dir(self, direct, player=None):
-        x,y = direct
-        self.cursor.inc(y)
+    def register_hdir(self, x, player=None):
         self.cursor.get().shift(x)
+        
+    def register_vdir(self, y, player=None):
+        self.cursor.inc(y)    
 
     def register_start(self, down):
         return self.register_activate(down)

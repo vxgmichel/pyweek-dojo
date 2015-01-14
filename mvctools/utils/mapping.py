@@ -21,6 +21,10 @@ class PlayerAction:
     ESCAPE = "escape"
     #: Direction action (arrows or stick typically)
     DIR = MappingController.dir_action
+    #: Horizontal direction action 
+    HDIR = MappingController.hdir_action
+    #: Vertical direction action
+    VDIR = MappingController.vdir_action
 
 
 # One player controller

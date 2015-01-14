@@ -72,6 +72,10 @@ class RoomModel(BaseModel):
         """Get the score from gamedata."""
         return {i:0 for i in (1,2)}
 
+    @property
+    def gameover(self):
+        return any(self.players[pid].ko for pid in (1,2))
+
     def register_activate(self, down, player):
         """Register a jump from the controller."""
         if self.colliding:
@@ -81,7 +85,7 @@ class RoomModel(BaseModel):
 
     def register_start(self, down):
         """Register a reset from the controller."""
-        if down:
+        if down and self.gameover:
             self.control.register_next_state(type(self.state))
             return True
 
@@ -149,7 +153,7 @@ class RoomModel(BaseModel):
     def update_hit(self):
         """Test collision between players."""
         # Test ko
-        if any(self.players[pid].ko for pid in (1,2)):
+        if self.gameover:
             self.colliding = False
             return
         # Prepare collision function
@@ -192,12 +196,21 @@ class RoomModel(BaseModel):
 
     def callback(self):
         """Callback to update the players when the pause is over."""
+        # Bouncing
+        p1, p2 = self.players[1], self.players[2]
+        if p1.fixed:
+            p2.speed *= (-1,) * 2
+        elif p2.fixed:
+            p1.speed *= (-1,) * 2
+        else:
+            p1.speed, p2.speed = p2.speed, p1.speed
+        # Callback
         hit = self.callback_data
         for i, j in ((1,2), (2,1)):
             if hit[i]:
                 self.players[j].set_ko()
                 self.players[j].blinking_timer.reset()
-            self.players[i].speed *= (-self.damping,)*2
+            self.players[i].speed *= (self.damping,) * 2      
 
 
 # Border model

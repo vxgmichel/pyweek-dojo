@@ -4,6 +4,20 @@
 import pygame as pg
 from mvctools.common import xytuple
 
+
+# Decorator
+def filter_double_method_call(func):
+    """The return function doesn't call the original function
+    on duplicate calls. It returns None instead.
+    """
+    save = []
+    def wrapper(self, *args):
+        if tuple(save) != args:
+            save[:] = args
+            return func(self, *args)
+    return wrapper
+
+
 # Base controller class
 class BaseController(object):
     """ Base controller class for the MVC pattern implementation.
@@ -155,10 +169,12 @@ class MouseController(BaseController):
         if event.type == pg.MOUSEBUTTONUP:
             action = self.mouse_button_mapping[event.button]
             model = self.get_model_at(event.pos)
-            if model: return model.register(action)
+            if model:
+                return model.register(action)
         if event.type == pg.MOUSEMOTION:
             model = self.get_model_at(event.pos)
-            if model: return model.register(MouseAction.HOVER)
+            if model:
+                return model.register(MouseAction.HOVER)
 
     def get_models_at(self, pos):
         """Get the list of models corresponding to a given position.
@@ -178,8 +194,10 @@ class MouseController(BaseController):
         Returns:
             BaseModel: topmost model or None if doesn't exist
         """
-        try: return self.get_models_at(pos)[0]
-        except IndexError: return None
+        try:
+            return self.get_models_at(pos)[0]
+        except IndexError:
+            return None
 
 
 # Direction controller
@@ -207,14 +225,17 @@ class MappingController(BaseController):
     #: Axis direction factor
     axis_factors = +1, +1
 
-    #: Direction action
+    #: Direction actions
     dir_action = "dir"
+    hdir_action = "hdir"
+    vdir_action = "vdir"
 
     #: Action that requires update on first frame
     special_actions = []
 
     def init(self):
         """Initialize the joysticks."""
+        self.lastdir = None, None
         # Init joystick
         pg.joystick.quit()
         pg.joystick.init()
@@ -234,7 +255,12 @@ class MappingController(BaseController):
                    self.get_hat_direction(player)]
             iterator = (direction for direction in lst if any(direction))
             direction = next(iterator, xytuple(0,0))
-            self.register(self.dir_action, direction, player)
+            if self.dir_action in self.special_actions:
+                self.register(self.dir_action, direction, player)
+            if self.hdir_action in self.special_actions:
+                self.register(self.hdir_action, direction.x, player)
+            if self.dir_action in self.special_actions:
+                self.register(self.vdir_action, direction.y, player)
         # Special keys
         dct = pg.key.get_pressed()
         special_keys = (key for key, value in self.key_dct.items()
@@ -306,13 +332,25 @@ class MappingController(BaseController):
             return self.model.register(action, down, player)
         # Direction action
         direction = self.get_key_direction(player)
-        return self.register(action, direction, player)
+        return self.register_directions(direction, player)
 
     def register_hat(self, player):
         """Register a hat event."""
         direction = self.get_hat_direction(player)
-        return self.register(self.dir_action, direction, player)
+        return self.register_directions(direction, player)
 
+    def register_axis(self, player):
+        """Register an axis event."""
+        direction = self.get_axis_direction(player)
+        return self.register_directions(direction, player)
+
+    def register_directions(self, direction, player):
+        """Register direction changes."""
+        return self.register_dir(direction, player) or \
+               self.register_hdir(direction.x, player) or \
+               self.register_vdir(direction.y, player)
+
+    @filter_double_method_call
     def register_button(self, button, player, down):
         """Register a button event."""
         action, as_player = self.button_dct.get(button, (None,None))
@@ -325,7 +363,18 @@ class MappingController(BaseController):
         # Player related action
         return self.model.register(action, down, player)
 
-    def register_axis(self, player):
-        """Register an axis event."""
-        direction = self.get_axis_direction(player)
-        return self.register(self.dir_action, direction, player)
+    @filter_double_method_call
+    def register_dir(self, direc, player):
+        return self.register(self.dir_action, direc, player)
+
+    @filter_double_method_call
+    def register_hdir(self, x, player):
+        return self.register(self.hdir_action, x, player)
+
+    @filter_double_method_call
+    def register_vdir(self, y, player):
+        return self.register(self.vdir_action, y, player)
+
+               
+
+        

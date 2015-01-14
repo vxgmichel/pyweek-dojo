@@ -45,7 +45,7 @@ class RoomSprite(AutoSprite):
             ControlSprite(self, player=player,
                           text=text,
                           alignment=alignment)
-        ResetSprite(self, text=self.reset_string)
+        ResetSprite(self)#, text=self.reset_string)
         TitleSprite(self)
 
 
@@ -54,7 +54,8 @@ class TitleSprite(WhiteTextSprite):
     """Title line."""
 
     # Settings
-    relative_pos = 0.5, 0.3
+    relative_pos = 0.5, 0.35
+    font_size = 22
 
     @property
     def pos(self):
@@ -74,7 +75,13 @@ class ResetSprite(WhiteTextSprite):
 
     # Settings
     font_size = 12
-    relative_pos = 0.5, 0.42
+    relative_pos = 0.5, 0.52
+    text_dict = ["", "REMATCH:U"]
+
+    @property
+    def text(self):
+        """Text from the model."""
+        return self.text_dict[self.model.gameover]
 
     @property
     def pos(self):

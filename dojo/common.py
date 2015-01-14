@@ -21,7 +21,7 @@ def flash(image, lighter=True, dark_offset=64, light_offset=32):
     """Create a lighter or darker copy of a given surface."""
     result = image.copy()
     delta = dark_offset if lighter else light_offset
-    color = (delta, delta, delta*2, 0)
+    color = (delta, delta, delta, 0)
     flag = pygame.BLEND_RGBA_SUB if lighter else pygame.BLEND_RGBA_ADD
     result.fill(color, special_flags=flag)
     return result

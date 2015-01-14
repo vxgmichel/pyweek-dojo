@@ -1,11 +1,15 @@
 from mvctools import BaseState, BaseModel, BaseView, AutoSprite
-from mvctools.utils import TextSprite, EntryModel, MenuModel, TwoPlayersController, MenuSprite
+from mvctools.utils import TextSprite, EntryModel, MenuModel, MenuSprite
+from mvctools.utils import TwoPlayersController, PlayerAction
 import pygame
 
 
 # Controller
 class PauseController(TwoPlayersController):
-    pass
+    # Remapping
+    button_dct = dict(TwoPlayersController.button_dct)
+    # Add escape on Start button
+    button_dct[7] = PlayerAction.ESCAPE, False
 
 
 # Model
