@@ -6,7 +6,7 @@ from mvctools.utils import TwoPlayersController, PlayerAction
 
 # Dojo controller
 class DojoController(TwoPlayersController):
-    """Main state controller, based on TwoPLayersCOntroller.
+    """Main state controller, based on TwoPLayersController.
 
     ACTIVATE is used for jumping, START is use for reset.
     BACK and SELECT actions are not used.

@@ -5,19 +5,6 @@ import pygame as pg
 from mvctools.common import xytuple
 
 
-# Decorator
-def filter_double_method_call(func):
-    """The return function doesn't call the original function
-    on duplicate calls. It returns None instead.
-    """
-    save = []
-    def wrapper(self, *args):
-        if tuple(save) != args:
-            save[:] = args
-            return func(self, *args)
-    return wrapper
-
-
 # Base controller class
 class BaseController(object):
     """ Base controller class for the MVC pattern implementation.
@@ -337,10 +324,10 @@ class MappingController(BaseController):
             return
         # Generic action
         if player is None:
-            return self.model.register(action, down)
+            return self.register(action, down)
         # Player related action
         if action != self.dir_action:
-            return self.model.register(action, down, player)
+            return self.register(action, down, player)
         # Direction action
         direction = self.get_key_direction(player)
         return self.register_directions(direction, player)
@@ -369,6 +356,6 @@ class MappingController(BaseController):
             return
         # Generic action
         if not as_player:
-            return self.model.register(action, down)
+            return self.register(action, down)
         # Player related action
-        return self.model.register(action, down, player)
+        return self.register(action, down, player)
