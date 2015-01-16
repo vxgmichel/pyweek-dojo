@@ -12,27 +12,16 @@ class PauseController(TwoPlayersController):
     button_dct[7] = PlayerAction.ESCAPE, False
 
 
-# Model
-class PauseModel(BaseModel):
-
-    def register_escape(self, down):
-        return down
-
-    def register(self, *args, **kwargs):
-        """Forward actions to the room model."""
-        return self.menu.register(*args, **kwargs)
-
-    def init(self):
-        self.menu = PauseMenuModel(self)
-
-
-class PauseMenuModel(MenuModel):
+class PauseModel(MenuModel):
 
     @property
     def entry_data(self):
         return {0: (EntryModel, "resume", self.resume),
                 1: (EntryModel, "reset score", self.reset),
                 2: (EntryModel, "quit", self.quit)}
+
+    def register_escape(self, down):
+        return down
 
     def resume(self):
         return True
@@ -47,33 +36,21 @@ class PauseMenuModel(MenuModel):
         raise SystemExit
 
 
-class PauseSprite(AutoSprite):
-
-    bgd_color = "#282828"
-    position_ratio = 0.5, 0.5
-    size_ratio = 0.5, 0.35
-
-    def init(self):
-        pos = (self.screen_size * self.position_ratio).map(int)
-        size = (self.screen_size * self.size_ratio).map(int)
-        self.image = pygame.Surface(size)
-        self.image.fill(pygame.Color(self.bgd_color))
-        self.rect = self.image.get_rect(center=pos)
-
-
-class PauseMenuSprite(MenuSprite):
+class PauseSprite(MenuSprite):
 
     # Entries
     font_sizes = 200, 300
     font_name = "visitor2"
     color = "#F0F0F0"
+    bgd_color = "#282828"
     alignment = "center"
-    margins = 0, 0
+    margins = 100, 50
+    interlines = 0, 50
 
     # Position
     reference = "center"
     position_ratio = 0.5, 0.5
-    size_ratio = 0.4, 0.3
+    size_ratio = 0.5, 0.4
 
     # Layer
     def get_layer(self):
@@ -91,8 +68,7 @@ class PauseMenuSprite(MenuSprite):
 # View class
 class PauseView(BaseView):
     shade_ratio = 0.5
-    sprite_class_dct = {PauseModel: PauseSprite,
-                        PauseMenuModel: PauseMenuSprite}
+    sprite_class_dct = {PauseModel: PauseSprite}
 
     def create_background(self):
         bgd = self.screen.copy()

@@ -34,13 +34,13 @@ class LineSprite(AutoSprite):
     # Processing
     opacity = 1.0
     # Position
-    pos = 0,0
+    pos = 0, 0
     reference = "center"
     # Background
     background = None
 
     opacify = cache_method(opacify, static=True)
-    render =  cache_method(render,  static=True)
+    render = cache_method(render,  static=True)
 
     def init(self, **kwargs):
         for key, value in kwargs.items():
@@ -56,7 +56,6 @@ class LineSprite(AutoSprite):
         raw = self.render(self.font, self.text, self.antialias,
                           self.color, self.background)
         return self.opacify(raw, self.opacity)
-
 
     def get_rect(self):
         kwargs = {self.reference: self.pos}
@@ -75,8 +74,15 @@ class ChilrenLineSprite(LineSprite):
     def pos(self):
         return self.parent.get_child_pos(self.id)
 
+    @property
+    def background(self):
+        if not self.parent.bgd_image:
+            return None
+        return self.parent.bgd_color
+
     def init(self, lid):
         self.id = lid
+
 
 class TextView(BaseView):
 
@@ -91,23 +97,26 @@ class TextView(BaseView):
     opacity = 1.0
     # Position
     alignment = "left"
-    # Margin
-    margin = 0
+    # Interline
+    interline = 0
+    # Margins
+    margins = 0, 0
 
     def init(self):
         self.lines = []
 
     def update(self):
         self.update_lines()
-        if not self.lines:
-            self.max_width = 0
-        else:
-            self.max_width = max(child.get_image().get_width()
-                                 for child in self.lines)
+        self.max_width = 2 * self.margins[0]
+        if self.lines:
+            self.max_width += max(child.get_image().get_width()
+                                  for child in self.lines)
 
     def get_child_text(self, lid):
-        try: return self.text.splitlines()[lid]
-        except IndexError: return ''
+        try:
+            return self.text.splitlines()[lid]
+        except IndexError:
+            return ''
 
     @property
     def reference(self):
@@ -127,22 +136,22 @@ class TextView(BaseView):
 
     def get_child_pos(self, lid):
         previous = self.lines[lid-1] if lid else None
-        margin = xytuple(0, self.margin)
+        interline = xytuple(0, self.interline)
         # Left aligment
         if self.alignment == "left":
             if previous:
-                return margin + previous.bottomleft
-            return 0,0
+                return interline + previous.bottomleft
+            return self.margins
         # Centered aligment
         if self.alignment == "center":
             if previous:
-                return margin + previous.midbottom
-            return self.max_width/2, 0
+                return interline + previous.midbottom
+            return xytuple(self.margins) + (self.max_width/2, 0)
         # Right aligment
         if self.alignment == "right":
             if previous:
-                return margin + previous.bottomright
-            return self.max_width, 0
+                return interline + previous.bottomright
+            return xytuple(self.margins) + (self.max_width, 0)
 
     @property
     def size(self):
@@ -150,13 +159,14 @@ class TextView(BaseView):
             return xytuple(0, 0)
         x = max(sprite.rect.right for sprite in self.group)
         y = max(sprite.rect.bottom for sprite in self.group)
-        return xytuple(x, y)
+        return xytuple(x, y) + self.margins
 
 
 @from_parent(["font_size", "font_name", "antialias", "color", "opacity",
               "text", "bgd_color", "bgd_image", "margin", "alignment"])
 class ChildrenTextView(TextView):
     pass
+
 
 class TextSprite(ViewSprite):
 
@@ -170,7 +180,7 @@ class TextSprite(ViewSprite):
     # Processing
     opacity = 1.0
     # Position
-    pos = 0,0
+    pos = 0, 0
     reference = "center"
     alignment = "left"
     # Margin

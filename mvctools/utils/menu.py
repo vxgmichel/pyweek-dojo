@@ -1,13 +1,10 @@
-from mvctools import MouseController, BaseModel, BaseView, BaseState
-from mvctools.sprite import ViewSprite
+from mvctools import BaseModel, BaseView
+from mvctools.sprite import ViewSprite, AutoSprite
 from mvctools.common import cursoredlist, from_parent, xytuple
 from mvctools.utils.text import LineSprite
-from collections import defaultdict
-import pygame as pg
 
 
 # Entry model
-
 class EntryModel(BaseModel):
 
     def init(self, pos, text, callback=None):
@@ -55,9 +52,9 @@ class MenuModel(BaseModel):
 
     def register_hdir(self, x, player=None):
         self.cursor.get().shift(x)
-        
+
     def register_vdir(self, y, player=None):
-        self.cursor.inc(y)    
+        self.cursor.inc(y)
 
     def register_start(self, down):
         return self.register_activate(down)
@@ -75,13 +72,13 @@ class MenuModel(BaseModel):
     def register_back(self):
         self.cursor[-1].activate()
 
-# Entry sprite
 
+# Entry sprite
 @from_parent(["font_sizes", "font_name", "antialias",
               "color", "opacity", "reference"])
 class EntrySprite(LineSprite):
 
-    margins = 0,0
+    margins = 0,
     alignment = "left"
 
     def get_max_rect(self):
@@ -104,8 +101,14 @@ class EntrySprite(LineSprite):
     def pos(self):
         return self.parent.get_child_pos(self.model.pos)
 
-# Entry View
 
+# Bullet sprite
+class BulletSprite(AutoSprite):
+    # TODO
+    pass
+
+
+# Menu View
 class MenuView(BaseView):
 
     sprite_class_dct = {EntryModel: EntrySprite}
@@ -120,14 +123,15 @@ class MenuView(BaseView):
     opacity = 1.0
     alignment = "left"
     # Margins
-    margins = 0,0
+    interlines = 0, 0
+    margins = 0, 0
 
     def update(self):
         self.rect_dict = {}
         # Get rects
         for sprite in self.group:
             rect = sprite.get_max_rect()
-            pos = xytuple(self.margins)
+            pos = xytuple(self.interlines)
             pos += 0, rect.h
             pos *= (sprite.model.pos,) * 2
             setattr(rect, self.reference, pos)
@@ -135,10 +139,10 @@ class MenuView(BaseView):
         # Move rects
         if not self.rect_dict:
             return
-        x = - min(rect.x for rect in self.rect_dict.values())
-        y = - min(rect.y for rect in self.rect_dict.values())
+        x = min(rect.x for rect in self.rect_dict.values())
+        y = min(rect.y for rect in self.rect_dict.values())
         for rect in self.rect_dict.values():
-            rect.move_ip((x,y,))
+            rect.move_ip(xytuple(self.margins) - (x, y))
 
     @property
     def reference(self):
@@ -152,23 +156,25 @@ class MenuView(BaseView):
         try:
             return getattr(self.rect_dict[pos], self.reference)
         except KeyError:
-            return 0, 0
+            return self.margins
 
     @property
     def size(self):
+        margins = xytuple(self.margins) * (2, 2)
         try:
             rects = self.rect_dict.values()
             rect = rects[0].unionall(rects[1:])
-            return rect.size
+            return margins + rect.size
         except (IndexError, AttributeError):
-            return 0, 0
+            return margins
 
 
-@from_parent(["font_sizes", "font_name", "antialias", "color",
-              "opacity", "text", "margins", "alignment"])
+@from_parent(["font_sizes", "font_name", "antialias", "color", "opacity",
+              "text", "margins", "alignment", "bgd_color", "bgd_image"])
 class ChildrenMenuView(MenuView):
     """"""
     pass
+
 
 class MenuSprite(ViewSprite):
 
@@ -186,7 +192,10 @@ class MenuSprite(ViewSprite):
     alignment = "left"
     # Margin
     margins = 0, 0
-
+    interlines = 0, 0
+    # Background
+    bgd_color = None
+    bgd_image = None
 
     # View
     view_cls = ChildrenMenuView
