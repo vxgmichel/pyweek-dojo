@@ -29,7 +29,7 @@ class LineSprite(AutoSprite):
     font_name = ""
     # Renderer
     text = ""
-    antialias = True
+    antialias = False
     color = "black"
     # Processing
     opacity = 1.0
@@ -91,7 +91,7 @@ class TextView(BaseView):
     font_name = ""
     # Renderer
     text = ""
-    antialias = True
+    antialias = False
     color = "black"
     # Processing
     opacity = 1.0
@@ -175,7 +175,7 @@ class TextSprite(ViewSprite):
     font_name = ""
     # Renderer
     text = ""
-    antialias = True
+    antialias = False
     color = "black"
     # Processing
     opacity = 1.0

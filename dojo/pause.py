@@ -17,7 +17,7 @@ class PauseModel(MenuModel):
     @property
     def entry_data(self):
         return {0: (EntryModel, "resume", self.resume),
-                1: (EntryModel, "reset score", self.reset),
+                1: (EntryModel, "main menu", self.reset),
                 2: (EntryModel, "quit", self.quit)}
 
     def register_escape(self, down):
@@ -29,7 +29,7 @@ class PauseModel(MenuModel):
     def reset(self):
         del self.control.gamedata.score_dct
         state = self.control.pop_state()
-        self.control.register_next_state(type(state))
+        self.control.register_next_state(self.control.first_state)
         return True
 
     def quit(self):
@@ -39,18 +39,18 @@ class PauseModel(MenuModel):
 class PauseSprite(MenuSprite):
 
     # Entries
-    font_sizes = 200, 300
+    font_sizes = 38, 48
     font_name = "visitor2"
-    color = "#F0F0F0"
+    colors = "#909090", "#F0F0F0"
     bgd_color = "#282828"
     alignment = "center"
-    margins = 100, 50
-    interlines = 0, 50
+    margins = 20, 10
+    interlines = 0, 10
 
     # Position
     reference = "center"
     position_ratio = 0.5, 0.5
-    size_ratio = 0.5, 0.4
+    size_ratio = 0.5
 
     # Layer
     def get_layer(self):
@@ -60,18 +60,15 @@ class PauseSprite(MenuSprite):
     def pos(self):
         return (self.screen_size * self.position_ratio).map(int)
 
-    @property
-    def size(self):
-        return (self.screen_size * self.size_ratio).map(int)
-
 
 # View class
 class PauseView(BaseView):
     shade_ratio = 0.5
     sprite_class_dct = {PauseModel: PauseSprite}
+    size = 640, 360
 
     def create_background(self):
-        bgd = self.screen.copy()
+        bgd = self.resource.scale(pygame.display.get_surface(), self.screen_size)
         color = (255*self.shade_ratio,)*3
         bgd.fill(color, special_flags=pygame.BLEND_MULT)
         return bgd

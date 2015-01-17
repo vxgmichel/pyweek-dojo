@@ -5,25 +5,24 @@ from mvctools import Dir, NextStateException
 
 from dojo.controller import DojoController
 from dojo.view import DojoView
-from dojo.model import DojoModel
+from dojo.model import DojoModel, TitleMenuModel
 
 import pygame
 from random import choice, random
-    
-# Zero Player Model
-class ZeroPlayerModel(DojoModel):
 
-    def register(self, action, down, *args):
-        """Pass the demo."""
-        actions = ["start", "select", "escape", "activate", "back"]
-        if down and action in actions:
-            self.control.register_next_state(OnePlayerState)
-            try:
-                del self.control.gamedata.score_dct
-            except AttributeError:
-                pass
-            return True
+# Title Screen Model
+class DojoMainModel(DojoModel):
 
+    display_scores = False
+
+    def init(self):
+        DojoModel.init(self)
+        self.menu = TitleMenuModel(self.room)
+
+    def register(self, *args, **kwargs):
+        """Forward action to the menu."""
+        return self.menu.register(*args, **kwargs)
+        
     def post_update(self):
         """Set up AI for both players and disable bullet time.
         """
@@ -47,13 +46,6 @@ class OnePlayerModel(DojoModel):
 
     def register(self, action, arg, player=None):
         """Escape to pass and remap player 2 events on player 1."""
-        if arg and action == "escape":
-            self.control.register_next_state(TwoPlayerState)
-            try:
-                del self.control.gamedata.score_dct
-            except AttributeError:
-                pass
-            return True
         if player is None:
             return self.room.register(action, arg)
         return self.room.register(action, arg, 1)
@@ -71,20 +63,25 @@ class OnePlayerModel(DojoModel):
         if not player.fixed:
             player.register_dir(Dir.NONE)
 
-# Zero Player state
-class ZeroPlayerState(BaseState):
-    model_class = ZeroPlayerModel
-    controller_class = DojoController
-    view_class = DojoView
-
-# One Player state
+# One player state
 class OnePlayerState(BaseState):
     model_class = OnePlayerModel
     controller_class = DojoController
     view_class = DojoView
 
-# Two Player state
-class TwoPlayerState(BaseState):
+# Two players state
+class TwoPlayersState(BaseState):
     model_class = DojoModel
     controller_class = DojoController
     view_class = DojoView
+
+# Dojo main state
+class DojoMainState(BaseState):
+    model_class = DojoMainModel
+    controller_class = DojoController
+    view_class = DojoView
+    entries = [("1 player", OnePlayerState),
+               ("2 players", TwoPlayersState),
+               ("controls", None),
+               ("settings", None),
+               ("quit", None)]

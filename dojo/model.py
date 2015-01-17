@@ -3,7 +3,7 @@
 # Imports
 from pygame import Rect, Color
 from mvctools import BaseModel, Dir, Timer, xytuple, from_gamedata
-from mvctools.utils.camera import CameraModel
+from mvctools.utils import CameraModel, EntryModel, MenuModel
 from dojo.common import perfect_collide
 from dojo.pause import PauseState
 
@@ -17,6 +17,10 @@ class DojoModel(CameraModel):
 
     # Camera speed
     speed = 300 # pixel / s
+
+    # Display
+    display_scores = True
+    display_controls = False
 
     def init(self):
         """Initialize camera and create the room model."""
@@ -71,6 +75,14 @@ class RoomModel(BaseModel):
     def score_dct(self):
         """Get the score from gamedata."""
         return {i:0 for i in (1,2)}
+
+    @property
+    def display_controls(self):
+        return self.parent.display_controls
+
+    @property
+    def display_scores(self):
+        return self.parent.display_scores
 
     @property
     def gameover(self):
@@ -209,6 +221,23 @@ class RoomModel(BaseModel):
             if hit[i]:
                 self.players[j].set_ko()
                 self.players[j].blinking_timer.reset()
+
+                
+# State entry model
+class StateEntryModel(EntryModel):
+
+    def activate(self):
+        self.control.register_next_state(self.callback)
+        return True
+
+
+# Title menu model
+class TitleMenuModel(MenuModel):
+
+    @property
+    def entry_data(self):
+        return {i: (StateEntryModel, name, state)
+                for i, (name, state) in enumerate(self.state.entries)}
 
 
 # Border model

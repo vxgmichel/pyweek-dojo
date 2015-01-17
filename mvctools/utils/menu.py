@@ -74,11 +74,10 @@ class MenuModel(BaseModel):
 
 
 # Entry sprite
-@from_parent(["font_sizes", "font_name", "antialias",
-              "color", "opacity", "reference"])
+@from_parent(["font_sizes", "font_name", "antialias", "opacity", "reference",
+              "colors"])
 class EntrySprite(LineSprite):
 
-    margins = 0,
     alignment = "left"
 
     def get_max_rect(self):
@@ -96,6 +95,10 @@ class EntrySprite(LineSprite):
     @property
     def font_size(self):
         return self.font_sizes[self.model.selected]
+
+    @property
+    def color(self):
+        return self.colors[self.model.selected]
 
     @property
     def pos(self):
@@ -117,8 +120,8 @@ class MenuView(BaseView):
     font_sizes = 0, 0
     font_name = ""
     # Renderer
-    antialias = True
-    color = "black"
+    antialias = False
+    colors = "black", "black"
     # Processing
     opacity = 1.0
     alignment = "left"
@@ -169,8 +172,9 @@ class MenuView(BaseView):
             return margins
 
 
-@from_parent(["font_sizes", "font_name", "antialias", "color", "opacity",
-              "text", "margins", "alignment", "bgd_color", "bgd_image"])
+@from_parent(["font_sizes", "font_name", "antialias", "colors", "opacity",
+              "text", "margins", "alignment", "bgd_color", "bgd_image",
+              "interlines"])
 class ChildrenMenuView(MenuView):
     """"""
     pass
@@ -182,8 +186,8 @@ class MenuSprite(ViewSprite):
     font_sizes = 0, 0
     font_name = ""
     # Renderer
-    antialias = True
-    color = "black"
+    antialias = False
+    colors = "black", "black"
     # Processing
     opacity = 1.0
     # Position

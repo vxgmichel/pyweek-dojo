@@ -9,11 +9,11 @@ from pygame import Rect, Surface, transform, draw, Color
 
 # MVC tools imports
 from mvctools import BaseView, AutoSprite, Dir, xytuple
-from mvctools.utils import TextSprite
+from mvctools.utils import TextSprite, MenuSprite
 from mvctools.utils import CameraSprite
 
 # Dojo imports
-from dojo.model import PlayerModel, RectModel, RoomModel
+from dojo.model import PlayerModel, RectModel, RoomModel, TitleMenuModel
 from dojo.common import opacify_ip, flash
 
 
@@ -23,7 +23,6 @@ class WhiteTextSprite(TextSprite):
 
     # Font settings
     font_name = "visitor2"
-    font_size = 20
     antialias = False
     color = "white"
     opacity = 0.3
@@ -36,26 +35,27 @@ class RoomSprite(AutoSprite):
 
     string_dct = {1: ("P1\n-RDFG-\nJUMP-X", "left"),
                   2: ("P2\nARROWS\nJUMP-P", "right"),}
-    reset_string = "RESET:U"
 
     def init(self):
         """Initialize the sprite."""
-        for player, (text, alignment) in self.string_dct.items():
-            ScoreSprite(self, player=player)
-            ControlSprite(self, player=player,
-                          text=text,
-                          alignment=alignment)
-        ResetSprite(self)#, text=self.reset_string)
         TitleSprite(self)
-
-
+        for player, (text, alignment) in self.string_dct.items():
+            if self.model.display_scores:
+                ScoreSprite(self, player=player)
+            if self.model.display_controls:
+                ControlSprite(self, player=player,
+                              text=text,
+                              alignment=alignment)
+        if self.model.display_scores:
+            ResetSprite(self)
+        
 # Title sprite
 class TitleSprite(WhiteTextSprite):
     """Title line."""
 
     # Settings
-    relative_pos = 0.5, 0.35
-    font_size = 22
+    relative_pos = 0.5, 0.25
+    font_size = 24
 
     @property
     def pos(self):
@@ -75,10 +75,9 @@ class ResetSprite(WhiteTextSprite):
 
     # Settings
     font_size = 12
-    relative_pos = 0.5, 0.52
+    relative_pos = 0.5, 0.75
     alignment = "center"
-    text_dict = ["JUMP!", "REMATCH\n-U-"]
-
+    text_dict = ["JUMP!\n ", "REMATCH\n-U-"]
     @property
     def text(self):
         """Text from the model."""
@@ -96,8 +95,9 @@ class ScoreSprite(WhiteTextSprite):
     """Score sprite"""
 
     # Settings
-    pos_dct = {1: (0.25, 0.4),
-               2: (0.75, 0.4)}
+    font_size = 36
+    pos_dct = {1: (0.25, 0.5),
+               2: (0.75, 0.5)}
 
     @property
     def pos(self):
@@ -125,6 +125,26 @@ class ControlSprite(WhiteTextSprite):
         """Position for the center of the control panels."""
         size = xytuple(*self.model.rect.bottomright)
         return size * self.pos_dct[self.player]
+
+
+# Title menu sprite
+class TitleMenuSprite(MenuSprite):
+
+    # Entries
+    font_sizes = 12, 12
+    font_name = "visitor2"
+    colors = "white", "black"
+    opacity = 0.3
+    alignment = "left"
+    interlines = 20, 0
+
+    # Position
+    reference = "center"
+    position_ratio = 0.5, 0.59
+
+    @property
+    def pos(self):
+        return (self.screen_size * self.position_ratio).map(int)
 
 
 # Aura sprite
@@ -308,7 +328,8 @@ class StaticDojoView(BaseView):
 
     sprite_class_dct = {PlayerModel: PlayerSprite,
                         RoomModel: RoomSprite,
-                        RectModel: RectSprite}
+                        RectModel: RectSprite,
+                        TitleMenuModel: TitleMenuSprite}
 
     @property
     def size(self):
