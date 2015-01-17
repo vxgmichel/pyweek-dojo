@@ -109,6 +109,27 @@ class BaseModel(object):
         """
         return self.update() or self._update_children() or self.post_update()
 
+    def change_parent(self, parent):
+        """Change the parent of the model.
+
+        Args:
+            parent (BaseModel or BaseControl): the parent of the model
+        """
+        self.isroot = not isinstance(parent, BaseModel)
+        # Attributes to higher instances
+        self.state = parent if self.isroot else parent.state
+        self.control = parent.control
+        self.gamedata = self.control.gamedata
+        # Semi private attribute
+        self._keygen = count() if self.isroot else parent._keygen
+        # Useful attributes
+        self.key = next(self._keygen)
+        # Children and parent handling
+        self.parent = parent
+        if not self.isroot:
+            self.parent._register_child(self)
+        
+
     def update(self):
         """Empty method to override.
 

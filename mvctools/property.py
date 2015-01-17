@@ -47,7 +47,10 @@ def from_gamedata(arg):
         # Deletter
         def fdel(self):
             """Deletter for the gamedata property."""
-            delattr(self.gamedata, name)
+            try:
+                delattr(self.gamedata, name)
+            except AttributeError:
+                pass
         doc = method.__doc__
         return property(fget, fset, fdel, doc)
     # Return the decorator or the method

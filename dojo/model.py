@@ -227,6 +227,7 @@ class RoomModel(BaseModel):
 class StateEntryModel(EntryModel):
 
     def activate(self):
+        del self.parent.parent.score_dct
         self.control.register_next_state(self.callback)
         return True
 

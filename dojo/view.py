@@ -26,21 +26,21 @@ class WhiteTextSprite(TextSprite):
     antialias = False
     color = "white"
     opacity = 0.3
-    margin = -3
 
 
 # Room sprite
 class RoomSprite(AutoSprite):
     """Room background sprite."""
 
-    string_dct = {1: ("P1\n-RDFG-\nJUMP-X", "left"),
-                  2: ("P2\nARROWS\nJUMP-P", "right"),}
+    string_dct = {0: ("CONTROLLER\nSTICK  \nJUMP-A \nRESET-Y", "center"),
+                  1: ("P1\n-RDFG-\nJUMP-X\n/SPACE", "left"),
+                  2: ("P2\nARROWS\nJUMP-P\n/ENTER", "right"),}
 
     def init(self):
         """Initialize the sprite."""
         TitleSprite(self)
         for player, (text, alignment) in self.string_dct.items():
-            if self.model.display_scores:
+            if self.model.display_scores and player:
                 ScoreSprite(self, player=player)
             if self.model.display_controls:
                 ControlSprite(self, player=player,
@@ -54,14 +54,14 @@ class TitleSprite(WhiteTextSprite):
     """Title line."""
 
     # Settings
-    relative_pos = 0.5, 0.25
+    relative_pos = 0.505, 0.25
     font_size = 24
 
     @property
     def pos(self):
         """Position for the center of the title."""
         size = xytuple(*self.model.rect.bottomright)
-        return size * self.relative_pos
+        return (size * self.relative_pos).map(round)
 
     @property
     def text(self):
@@ -75,9 +75,11 @@ class ResetSprite(WhiteTextSprite):
 
     # Settings
     font_size = 12
-    relative_pos = 0.5, 0.75
+    relative_pos = 0.503, 0.5
     alignment = "center"
+    interline = -2
     text_dict = ["JUMP!\n ", "REMATCH\n-U-"]
+    
     @property
     def text(self):
         """Text from the model."""
@@ -87,7 +89,7 @@ class ResetSprite(WhiteTextSprite):
     def pos(self):
         """Position for the center of the reset text."""
         size = xytuple(*self.model.rect.bottomright)
-        return size * self.relative_pos
+        return (size * self.relative_pos).map(round)
 
 
 # Score sprite
@@ -95,15 +97,15 @@ class ScoreSprite(WhiteTextSprite):
     """Score sprite"""
 
     # Settings
-    font_size = 36
-    pos_dct = {1: (0.25, 0.5),
-               2: (0.75, 0.5)}
+    font_size = 24
+    pos_dct = {1: (0.23, 0.35),
+               2: (0.79, 0.35)}
 
     @property
     def pos(self):
         """Position for the center of the score panels."""
         size = xytuple(*self.model.rect.bottomright)
-        return size * self.pos_dct[self.player]
+        return (size * self.pos_dct[self.player]).map(round)
 
     @property
     def text(self):
@@ -117,14 +119,16 @@ class ControlSprite(WhiteTextSprite):
 
     # Settings
     font_size = 12
-    pos_dct = {1: (0.25, 0.65),
-               2: (0.75, 0.65)}
+    interline = -3
+    pos_dct = {1: (0.23, 0.38),
+               2: (0.78, 0.38),
+               0: (0.5, 0.7),}
 
     @property
     def pos(self):
         """Position for the center of the control panels."""
         size = xytuple(*self.model.rect.bottomright)
-        return size * self.pos_dct[self.player]
+        return (size * self.pos_dct[self.player]).map(round)
 
 
 # Title menu sprite

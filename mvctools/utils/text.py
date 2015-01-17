@@ -163,7 +163,8 @@ class TextView(BaseView):
 
 
 @from_parent(["font_size", "font_name", "antialias", "color", "opacity",
-              "text", "bgd_color", "bgd_image", "margin", "alignment"])
+              "text", "bgd_color", "bgd_image", "margins", "alignment",
+              "interline"])
 class ChildrenTextView(TextView):
     pass
 
@@ -184,7 +185,8 @@ class TextSprite(ViewSprite):
     reference = "center"
     alignment = "left"
     # Margin
-    margin = 0
+    margins = 0, 0
+    interline = 0
     # Background
     bgd_color = None
     bgd_image = None
