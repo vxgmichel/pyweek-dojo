@@ -5,7 +5,7 @@ from mvctools import Dir, NextStateException, Timer, from_gamedata
 
 from dojo.controller import DojoController
 from dojo.view import DojoView
-from dojo.model import DojoModel, TitleMenuModel
+from dojo.model import DojoModel, TitleMenuModel, SettingsMenuModel
 
 import pygame
 from random import choice, expovariate
@@ -21,12 +21,16 @@ class NoPlayerModel(DojoModel):
     def init(self):
         DojoModel.init(self)
         self.reset_timer = Timer(self, stop=3, callback=self.reset)
+        self.start_timer = Timer(self, stop=3).start()
         for i in (1, 2):
             self.room.players[i].jump_timer = None
         
     def post_update(self):
         """Set up AI for both players and disable bullet time.
         """
+        # Wait for start signal
+        if not self.start_timer.is_set:
+            return
         # Disable bullet time
         if self.room.time_speed:
             self.room.time_speed = 1.0
@@ -98,8 +102,23 @@ class InfoModel(DojoModel):
         if action in actions and down:
            self.control.register_next_state(self.control.first_state)
            return True
-            
 
+     
+# Settings Model
+class SettingsModel(DojoModel):
+
+    display_controls = False
+    display_scores = False
+    
+    def init(self):
+        DojoModel.init(self)
+        self.menu = SettingsMenuModel(self.room)
+
+    def register(self, *args, **kwargs):
+        """Forward action to the menu."""
+        return self.menu.register(*args, **kwargs)
+
+            
 # One Player Model
 class OnePlayerModel(DojoModel):
 
@@ -131,7 +150,7 @@ class OnePlayerModel(DojoModel):
         # Delay a jump
         if player.fixed and player.prepared and not player.jump_timer:
             player.jump_timer = Timer(self,
-                                      stop=expovariate(2),
+                                      stop=expovariate(self.ai_speed),
                                       callback=self.gen_callback(player)
                                       ).start()
         # Reset direction
@@ -147,6 +166,12 @@ class OnePlayerModel(DojoModel):
 # Informative state
 class InfoState(BaseState):
     model_class = InfoModel
+    controller_class = DojoController
+    view_class = DojoView
+
+# Settings screen state
+class SettingsState(BaseState):
+    model_class = SettingsModel
     controller_class = DojoController
     view_class = DojoView
 
@@ -170,5 +195,5 @@ class DojoMainState(BaseState):
     entries = [("1 player", OnePlayerState),
                ("2 players", TwoPlayersState),
                ("controls", InfoState),
-               ("settings", None),
+               ("settings", SettingsState),
                ("quit", None)]

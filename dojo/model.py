@@ -2,7 +2,7 @@
 
 # Imports
 from pygame import Rect, Color
-from mvctools import BaseModel, Dir, Timer, xytuple, from_gamedata
+from mvctools import BaseModel, Dir, Timer, xytuple, from_gamedata, cursoredlist
 from mvctools.utils import CameraModel, EntryModel, MenuModel
 from dojo.common import perfect_collide
 from dojo.pause import PauseState
@@ -226,10 +226,41 @@ class RoomModel(BaseModel):
 # State entry model
 class StateEntryModel(EntryModel):
 
+    def init(self, pos, text, state=None):
+        EntryModel.init(self, pos, text)
+        self.state = state
+
     def activate(self):
         del self.parent.parent.score_dct
-        self.control.register_next_state(self.callback)
+        self.control.register_next_state(self.state)
         return True
+
+# State entry model
+class SettingEntryModel(EntryModel):
+
+    def init(self, pos, text, setting, values):
+        self.pos = pos
+        self.base_text = text
+        self.setting = setting
+        value = self.control.settings.setting_to_string(setting)
+        self.values = cursoredlist(values)
+        if value not in values:
+            self.values.insert(0, value)
+        self.values.set(self.values.index(value))
+
+    @property
+    def text(self):
+        return self.base_text + " : " + self.values.get()
+
+    def activate(self):
+        self.apply_value()
+        self.control.reload_state()
+
+    def apply_value(self):
+        setattr(self.control.settings, self.setting, self.values.get())
+
+    def shift(self, shift):
+        self.values.inc(shift)
 
 
 # Title menu model
@@ -239,6 +270,31 @@ class TitleMenuModel(MenuModel):
     def entry_data(self):
         return {i: (StateEntryModel, name, state)
                 for i, (name, state) in enumerate(self.state.entries)}
+
+
+# Settings menu model
+class SettingsMenuModel(MenuModel):
+
+    @property
+    def entry_data(self):
+        return {0: (SettingEntryModel, "fullscreen",
+                    "fullscreen", ['yes', 'no']),
+                1: (SettingEntryModel, "size",
+                    "size", ["640x360", "960x540", "1280x720", "1600x900"]),
+                2: (EntryModel, "apply", self.apply_callback),
+                3: (EntryModel, "back   ", self.back_callback)}
+
+    def apply_callback(self):
+        for entry in self.cursor:
+            try:
+                entry.apply_value()
+            except AttributeError:
+                pass
+        self.control.reload_state()
+
+    def back_callback(self):
+        self.control.register_next_state(self.control.first_state)
+        return True
 
 
 # Border model

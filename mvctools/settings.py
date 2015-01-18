@@ -9,25 +9,21 @@ from mvctools.property import setting, default_setting
 
 def bool_to_string(value):
     """Convert a boolean to a string."""
-    return {True: 'true', False: 'false'}[value]
+    return {True: 'yes', False: 'no'}[value]
 
 def bool_from_string(string):
     """Convert a string to a boolean."""
-    if string.lower() in ["1", "t", "true"]:
+    if string.lower() in ["1", "t", "true", "yes"]:
         return True
-    if string.lower() in ["0", "f", "false"]:
+    if string.lower() in ["0", "f", "false", "no"]:
         return False
     raise ValueError("not a valid string")
 
-def fullscreen_to_string(value):
-    """Convert a boolean to a string."""
-    return {True: 'windowed', False: 'fullscreen'}[value]
-
 def fullscreen_from_string(string):
     """Convert a string to a boolean."""
-    if string.lower() in ["fullscreen", "full", "1", "t", "true"]:
+    if string.lower() in ["fullscreen", "full", "1", "t", "true", "yes"]:
         return True
-    if string.lower() in ["window", "windowed", "0", "f", "false"]:
+    if string.lower() in ["window", "windowed", "0", "f", "false", "no"]:
         return False
     raise ValueError("not a valid string")
 
@@ -106,7 +102,7 @@ class BaseSettings(object):
 
     @default_setting(cast=bool,
                      from_string=fullscreen_from_string,
-                     to_string=fullscreen_to_string)
+                     to_string=bool_to_string)
     def fullscreen(self):
         """Enable fullscreen mode."""
         return False

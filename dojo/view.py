@@ -14,6 +14,7 @@ from mvctools.utils import CameraSprite
 
 # Dojo imports
 from dojo.model import PlayerModel, RectModel, RoomModel, TitleMenuModel
+from dojo.model import SettingsMenuModel
 from dojo.common import opacify_ip, flash
 
 
@@ -132,7 +133,7 @@ class ControlSprite(WhiteTextSprite):
 
 
 # Title menu sprite
-class TitleMenuSprite(MenuSprite):
+class DojoMenuSprite(MenuSprite):
 
     # Entries
     font_sizes = 12, 12
@@ -333,7 +334,8 @@ class StaticDojoView(BaseView):
     sprite_class_dct = {PlayerModel: PlayerSprite,
                         RoomModel: RoomSprite,
                         RectModel: RectSprite,
-                        TitleMenuModel: TitleMenuSprite}
+                        TitleMenuModel: DojoMenuSprite,
+                        SettingsMenuModel: DojoMenuSprite}
 
     @property
     def size(self):

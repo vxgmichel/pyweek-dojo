@@ -127,39 +127,43 @@ class BaseControl(object):
         self.settings.parse_arguments(parser)
         return self.run()
 
-
     def run(self):
         """Run the game."""
         # Prepare the run
         self.pre_run()
         # Loop over the states
         while self.load_next_state():
+            self.update()
             try:
                 self.current_state.run()
                 self.current_state.clean()
             except SystemExit:
                 break
-            self.debug()
         # Exit safely
         self.safe_exit()
 
-
-    def debug(self):
-        import gc, pprint
-        from mvctools import AutoSprite
-        pp = pprint.PrettyPrinter(indent=4)
-        for s in gc.get_objects():
-            if isinstance(s, AutoSprite):
-                print s, len(gc.get_referrers(s))
-
     def pre_run(self):
-        """Method to override.
+        """Prepare the run.
+        Method to override.
+        """
+        self.update()
+        pygame.display.set_caption(self.window_title)
 
+    def update(self):
+        """Run before loading a state.
         This initializes the video mode.
+        Method to override.
         """
         flag = pygame.FULLSCREEN if self.settings.fullscreen else 0
-        pygame.display.set_mode(self.settings.size, flag)
-        pygame.display.set_caption(self.window_title)
+        size = self.settings.size
+        try:
+            current_flag = pygame.display.get_surface().get_flags()
+            current_flag &= pygame.FULLSCREEN
+            current_size = pygame.display.get_surface().get_size()
+            if current_flag  != flag or current_size != size:
+                raise pygame.error
+        except (pygame.error, AttributeError) as e:
+            pygame.display.set_mode(size, flag)
 
     def register_next_state(self, state):
         """Register the class of the next state to instantiate and run.
