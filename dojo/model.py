@@ -94,9 +94,9 @@ class RoomModel(BaseModel):
     def winner(self):
         if abs(self.score_dct[1] - self.score_dct[2]) < 2:
             return None
-        for pid in (1, 2):
-            if self.score_dct[pid] >= self.control.settings.scoring:
-                return pid
+        pid = max(self.score_dct, key=self.score_dct.get)
+        if self.score_dct[pid] >= self.control.settings.scoring:
+            return pid
 
     def register_activate(self, down, player):
         """Register a jump from the controller."""
