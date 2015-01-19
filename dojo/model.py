@@ -459,7 +459,7 @@ class PlayerModel(BaseModel):
     def get_rect_from_dir(self, direction):
         """Compute a hitbox inside the player in a given direction."""
         size = xytuple(*self.size) * ((self.hitbox_ratio,)*2)
-        attr = self.attr_dct[direction]
+        attr = Dir.DIR_TO_ATTR[direction]
         rect = Rect((0, 0), size)
         value = getattr(self.rect, attr)
         setattr(rect, attr, value)
