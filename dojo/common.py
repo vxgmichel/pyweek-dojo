@@ -52,7 +52,6 @@ def perfect_collide(rect1, img1, pos1, rect2, img2, pos2):
     flag = pygame.BLEND_RGBA_MIN
     pos1, pos2 = xytuple(pos1), xytuple(pos2)
     surf = pygame.Surface(rect.size).convert_alpha()
-    surf.blit(img1, (0,0), area=rect.move(-pos1), special_flags=flag)
-    surf.blit(img2, (0,0), area=rect.move(-pos2), special_flags=flag)
+    surf.blit(img1, (0, 0), area=rect.move(-pos1), special_flags=flag)
+    surf.blit(img2, (0, 0), area=rect.move(-pos2), special_flags=flag)
     return any(flatten(pygame.PixelArray(surf)))
-

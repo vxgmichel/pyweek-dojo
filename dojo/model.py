@@ -16,7 +16,7 @@ class DojoModel(CameraModel):
     ref = "room"
 
     # Camera speed
-    speed = 300 # pixel / s
+    speed = 300  # pixel / s
 
     # Display
     display_scores = True
@@ -26,16 +26,18 @@ class DojoModel(CameraModel):
         """Initialize camera and create the room model."""
         self.resource = self.control.resource
         self.size = self.resource.image.get(self.ref).get_size()
-        self.room_rect = Rect((0,0), self.size)
+        self.room_rect = Rect((0, 0), self.size)
         self.init_camera(self.room_rect, self.speed)
         self.room = RoomModel(self, self.room_rect)
 
     def pause(self, pause, callback):
         """Pause the game for a given time with a given callback."""
         self.room.time_speed, temp = 0, self.room.time_speed
+
         def target(timer):
             callback()
             self.room.time_speed = temp
+
         Timer(self, stop=pause, callback=target).start()
 
     def register(self, *args, **kwargs):
@@ -52,7 +54,7 @@ class RoomModel(BaseModel):
 
     # Pause when two players collide (with or without ko)
     pause_dct = {True: 1.0,
-                 False: 0.5,}
+                 False: 0.5, }
 
     # Distance for slow motion
     threshold = 16
@@ -68,13 +70,13 @@ class RoomModel(BaseModel):
         self.rect = room_rect
         self.size = self.rect.size
         self.border = BorderModel(self)
-        self.players = {i:PlayerModel(self, i) for i in (1,2)}
+        self.players = {i: PlayerModel(self, i) for i in (1, 2)}
         self.colliding = False
 
     @from_gamedata
     def score_dct(self):
         """Get the score from gamedata."""
-        return {i:0 for i in (1,2)}
+        return {i: 0 for i in (1, 2)}
 
     @property
     def display_controls(self):
@@ -86,7 +88,7 @@ class RoomModel(BaseModel):
 
     @property
     def gameover(self):
-        return any(self.players[pid].ko for pid in (1,2))
+        return any(self.players[pid].ko for pid in (1, 2))
 
     def register_activate(self, down, player):
         """Register a jump from the controller."""
@@ -115,9 +117,9 @@ class RoomModel(BaseModel):
 
     def post_update(self):
         """Decompose players trajectory into steps."""
-        maxi = max(len(self.players[pid].steps) for pid in (1,2)) - 1
+        maxi = max(len(self.players[pid].steps) for pid in (1, 2)) - 1
         for i in range(maxi+1):
-            for pid in (1,2):
+            for pid in (1, 2):
                 length = len(self.players[pid].steps) - 1
                 index = int(round(float(i*length)/maxi)) if maxi else 0
                 self.players[pid].rect = self.players[pid].steps[index]
@@ -127,14 +129,14 @@ class RoomModel(BaseModel):
     def update_step(self):
         """Update everything for the current step."""
         return self.update_speed() or self.update_hit() \
-               or self.update_collision()
+            or self.update_collision()
 
     def update_speed(self):
         """Update camera and game speed."""
         # Get distance
         lst = [float("inf")]
-        for i in (1,2):
-            j = 2 if i==1 else 1
+        for i in (1, 2):
+            j = 2 if i == 1 else 1
             pos_1 = xytuple(*self.players[i].legs.center)
             if not any(pos_1):
                 continue
@@ -144,7 +146,8 @@ class RoomModel(BaseModel):
             lst.append(abs(pos_1-pos_3))
         # Reset speed and camera
         if not self.colliding and min(lst) > float(self.threshold):
-            if self.time_speed: self.time_speed = 1.0
+            if self.time_speed:
+                self.time_speed = 1.0
             self.parent.reset_camera()
             return
         # Set speed
@@ -168,15 +171,15 @@ class RoomModel(BaseModel):
             self.colliding = False
             return
         # Prepare collision function
-        hit = {1:False, 2:False}
+        hit = {1: False, 2: False}
         collide = False
-        img1, img2 = (self.players[pid].get_image() for pid in (1,2))
-        pos1, pos2 = (self.players[pid].rect.topleft for pid in (1,2))
+        img1, img2 = (self.players[pid].get_image() for pid in (1, 2))
+        pos1, pos2 = (self.players[pid].rect.topleft for pid in (1, 2))
         collide_func = lambda r1, r2: perfect_collide(r1, img1, pos1,
                                                       r2, img2, pos2)
         # Test collision
-        for i in (1,2):
-            j = 2 if i==1 else 1
+        for i in (1, 2):
+            j = 2 if i == 1 else 1
             if collide_func(self.players[i].legs, self.players[j].legs):
                 collide = True
                 break
@@ -185,7 +188,7 @@ class RoomModel(BaseModel):
         # New collision
         if collide and not self.colliding:
             # Update
-            for i,j in ((1,2), (2,1)):
+            for i, j in ((1, 2), (2, 1)):
                 if hit[i] and not hit[j]:
                     self.score_dct[i] += 1
                     self.players[j].blinking_timer.start()
@@ -202,7 +205,7 @@ class RoomModel(BaseModel):
 
     def update_collision(self):
         """Test collision against the wall."""
-        for pid in (1,2):
+        for pid in (1, 2):
             self.players[pid].update_collision()
 
     def callback(self):
@@ -217,12 +220,12 @@ class RoomModel(BaseModel):
             p1.speed, p2.speed = p2.speed, p1.speed
         # Callback
         hit = self.callback_data
-        for i, j in ((1,2), (2,1)):
+        for i, j in ((1, 2), (2, 1)):
             if hit[i]:
                 self.players[j].set_ko()
                 self.players[j].blinking_timer.reset()
 
-                
+
 # State entry model
 class StateEntryModel(EntryModel):
 
@@ -329,18 +332,18 @@ class PlayerModel(BaseModel):
     """Player model. Most of the game physics is implemented here."""
 
     # Physics
-    air_friction = 0.5, 0.5  # s-1
-    gravity = 0, 981         # pixel/s-2
-    load_speed = 600         # pixel/s-2
-    init_speed = 250         # pixel/s
-    max_loading_speed = 1000 # pixel/s
+    air_friction = 0.5, 0.5   # s-1
+    gravity = 0, 981          # pixel/s-2
+    load_speed = 600          # pixel/s-2
+    init_speed = 250          # pixel/s
+    max_loading_speed = 1000  # pixel/s
 
     # Animation
-    period = 2.0          # s
-    pre_jump = 0.25       # s
-    load_factor_min = 5   # period-1
-    load_factor_max = 10  # period-1
-    blinking_period = 0.2 # s
+    period = 2.0           # s
+    pre_jump = 0.25        # s
+    load_factor_min = 5    # period-1
+    load_factor_max = 10   # period-1
+    blinking_period = 0.2  # s
 
     # Hitbox
     hitbox_ratio = 0.33
@@ -349,18 +352,7 @@ class PlayerModel(BaseModel):
     collide_dct = {Dir.DOWN: "bottom",
                    Dir.LEFT: "left",
                    Dir.RIGHT: "right",
-                   Dir.UP: "top",}
-
-    # Direction to Rect attributes for player collision
-    attr_dct =   {Dir.NONE:  "center",
-                  Dir.DOWN:  "midbottom",
-                  Dir.LEFT:  "midleft",
-                  Dir.RIGHT: "midright",
-                  Dir.UP:    "midtop",
-                  ( 1,  1):  "bottomright",
-                  ( 1, -1):  "topright",
-                  (-1,  1):  "bottomleft",
-                  (-1, -1):  "topleft",}
+                   Dir.UP: "top"}
 
     # Resource to get the player size
     ref = "player_1"
@@ -373,13 +365,13 @@ class PlayerModel(BaseModel):
         self.resource = self.control.resource
         # Player rectangle
         self.size = self.resource.image.get(self.ref)[0].get_size()
-        self.rect = Rect((0,0), self.size)
+        self.rect = Rect((0, 0), self.size)
         if pid == 1:
             self.rect.bottomleft = self.border.rect.bottomleft
         else:
             self.rect.bottomright = self.border.rect.bottomright
         # Player state
-        self.speed = self.remainder = xytuple(0.0,0.0)
+        self.speed = self.remainder = xytuple(0.0, 0.0)
         self.control_dir = Dir.NONE
         self.save_dir = Dir.NONE
         self.pos = Dir.DOWN
@@ -513,7 +505,7 @@ class PlayerModel(BaseModel):
         if self.fixed:
             if not any(self.save_dir) or \
                sum(self.save_dir*self.pos) > 0:
-                return xytuple(0,0)
+                return xytuple(0, 0)
             current_dir = self.save_dir - self.pos
             sign = lambda arg: cmp(arg, 0)
             return current_dir.map(sign)
@@ -523,8 +515,8 @@ class PlayerModel(BaseModel):
     def get_rect_from_dir(self, direction):
         """Compute a hitbox inside the player in a given direction."""
         size = xytuple(*self.size) * ((self.hitbox_ratio,)*2)
-        attr = self.attr_dct[direction]
-        rect = Rect((0,0), size)
+        attr = Dir.DIR_TO_ATTR[direction]
+        rect = Rect((0, 0), size)
         value = getattr(self.rect, attr)
         setattr(rect, attr, value)
         return rect
@@ -533,23 +525,23 @@ class PlayerModel(BaseModel):
     def head(self):
         """Head hitbox. Currently not used."""
         if self.ko:
-            return Rect(0,0,0,0)
+            return Rect(0, 0, 0, 0)
         if self.fixed:
-            return self.get_rect_from_dir(self.pos * (-1,-1))
-        return self.get_rect_from_dir(self.current_dir * (-1,-1))
+            return self.get_rect_from_dir(self.pos * (-1, -1))
+        return self.get_rect_from_dir(self.current_dir * (-1, -1))
 
     @property
     def body(self):
         """Body hitbox. Currently not used."""
         if self.ko:
-            return Rect(0,0,0,0)
+            return Rect(0, 0, 0, 0)
         return self.get_rect_from_dir(Dir.NONE)
 
     @property
     def legs(self):
         """Legs hitbox."""
         if self.ko or self.fixed:
-            return Rect(0,0,0,0)
+            return Rect(0, 0, 0, 0)
         return self.get_rect_from_dir(self.current_dir)
 
     def update(self):
@@ -560,7 +552,7 @@ class PlayerModel(BaseModel):
         # Update speed
         self.speed += self.delta_tuple * acc
         if self.fixed:
-            self.speed *= 0,0
+            self.speed *= 0, 0
         # Get step
         step = self.delta_tuple * self.speed
         step += self.remainder
