@@ -90,6 +90,14 @@ class RoomModel(BaseModel):
     def gameover(self):
         return any(self.players[pid].ko for pid in (1, 2))
 
+    @property
+    def winner(self):
+        if abs(self.score_dct[1] - self.score_dct[2]) < 2:
+            return None
+        for pid in (1, 2):
+            if self.score_dct[pid] >= self.control.settings.scoring:
+                return pid
+
     def register_activate(self, down, player):
         """Register a jump from the controller."""
         player = self.players[player]
@@ -101,7 +109,10 @@ class RoomModel(BaseModel):
     def register_start(self, down):
         """Register a reset from the controller."""
         if down and self.gameover:
-            self.control.register_next_state(type(self.state))
+            state = type(self.state)
+            if self.winner:
+                state = self.control.first_state
+            self.control.register_next_state(state)
             return True
 
     def register_escape(self, down):
@@ -284,8 +295,10 @@ class SettingsMenuModel(MenuModel):
                     "fullscreen", ['yes', 'no']),
                 1: (SettingEntryModel, "size",
                     "size", ["640x360", "960x540", "1280x720", "1600x900"]),
-                2: (EntryModel, "apply", self.apply_callback),
-                3: (EntryModel, "back   ", self.back_callback)}
+                2: (SettingEntryModel, "scoring",
+                    "scoring", ["10", "20", "30", "50", "80"]),
+                3: (EntryModel, "apply", self.apply_callback),
+                4: (EntryModel, "back ", self.back_callback)}
 
     def apply_callback(self):
         for entry in self.cursor:

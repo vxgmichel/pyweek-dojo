@@ -3,8 +3,25 @@
 
 # Imports
 import pygame
-from mvctools import BaseControl
+from mvctools import BaseControl, BaseSettings, default_setting
 from dojo.state import DojoMainState
+
+
+# Dojo settings
+class DojoSettings(BaseSettings):
+    """Custum setting class for Dojo."""
+
+    # Display scoring
+    arg_lst = list(BaseSettings.arg_lst)
+    arg_lst.append("scoring")
+
+    # Uncomment to display debug settings in help
+    # arg_lst = None
+
+    @default_setting(cast=int)
+    def scoring(self):
+        """Scoring to win the game"""
+        return 20
 
 
 # Create the main control
@@ -19,6 +36,7 @@ class Dojo(BaseControl):
 
     window_title = "Dojo"
     first_state = DojoMainState
+    settings_class = DojoSettings
     resource_dir = "resource"
     version = "1.3.1"
 
@@ -31,6 +49,5 @@ class Dojo(BaseControl):
 # Main function
 def main():
     dojo = Dojo()
-    # Uncomment to display debug settings in help
-    # dojo.settings.arg_lst = None
+
     dojo.main()

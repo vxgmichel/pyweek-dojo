@@ -77,12 +77,16 @@ class ResetSprite(WhiteTextSprite):
     relative_pos = 0.503, 0.5
     alignment = "center"
     interline = -2
-    text_dict = ["JUMP!\n ", "REMATCH\n-U-"]
+    text_dict = {(False, None): "JUMP!\n ",
+                 (True, None): "REMATCH\n-U-",
+                 (True, 1): "PLAYER 1\nWINS!",
+                 (True, 2): "PLAYER 2\nWINS!"}
 
     @property
     def text(self):
         """Text from the model."""
-        return self.text_dict[self.model.gameover]
+        key = self.model.gameover, self.model.winner
+        return self.text_dict.get(key, "")
 
     @property
     def pos(self):
