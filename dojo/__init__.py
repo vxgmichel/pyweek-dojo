@@ -38,7 +38,7 @@ class Dojo(BaseControl):
     first_state = DojoMainState
     settings_class = DojoSettings
     resource_dir = "resource"
-    version = "1.3.1"
+    version = "1.4.0"
 
     def pre_run(self):
         """Hide the mouse"""
