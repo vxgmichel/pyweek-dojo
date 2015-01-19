@@ -1,14 +1,15 @@
-from mvctools import BaseState, BaseModel, BaseView, AutoSprite
-from mvctools.utils import TextSprite, EntryModel, MenuModel, MenuSprite
-from mvctools.utils import TwoPlayersController, PlayerAction
-from mvctools import Dir, NextStateException, Timer, from_gamedata
+"""provide the different states for the game."""
 
+# Imports
+from random import choice, expovariate
+
+# Imports from mvctools
+from mvctools import BaseState, Dir, NextStateException, Timer, from_gamedata
+
+# Imports from dojo
 from dojo.controller import DojoController
 from dojo.view import DojoView
 from dojo.model import DojoModel, TitleMenuModel
-
-import pygame
-from random import choice, expovariate
 
 
 # No player model
@@ -23,7 +24,7 @@ class NoPlayerModel(DojoModel):
         self.reset_timer = Timer(self, stop=3, callback=self.reset)
         for i in (1, 2):
             self.room.players[i].jump_timer = None
-        
+
     def post_update(self):
         """Set up AI for both players and disable bullet time.
         """
@@ -84,7 +85,7 @@ class InfoModel(DojoModel):
 
     display_controls = True
     display_scores = False
-    
+
     def init(self):
         DojoModel.init(self)
 
@@ -96,9 +97,9 @@ class InfoModel(DojoModel):
         """Forward action to the menu."""
         actions = ["start", "select", "escape", "activate", "back"]
         if action in actions and down:
-           self.control.register_next_state(self.control.first_state)
-           return True
-            
+            self.control.register_next_state(self.control.first_state)
+            return True
+
 
 # One Player Model
 class OnePlayerModel(DojoModel):
@@ -144,11 +145,13 @@ class OnePlayerModel(DojoModel):
             player.jump_timer = None
         return callback
 
+
 # Informative state
 class InfoState(BaseState):
     model_class = InfoModel
     controller_class = DojoController
     view_class = DojoView
+
 
 # One player state
 class OnePlayerState(BaseState):
@@ -156,11 +159,13 @@ class OnePlayerState(BaseState):
     controller_class = DojoController
     view_class = DojoView
 
+
 # Two players state
 class TwoPlayersState(BaseState):
     model_class = DojoModel
     controller_class = DojoController
     view_class = DojoView
+
 
 # Dojo main state
 class DojoMainState(BaseState):

@@ -1,10 +1,13 @@
-from mvctools import BaseState, BaseModel, BaseView, AutoSprite
-from mvctools.utils import TextSprite, EntryModel, MenuModel, MenuSprite
+"""Provide a pause state."""
+
+# Imports
+from mvctools import BaseState, BaseView
+from mvctools.utils import EntryModel, MenuModel, MenuSprite
 from mvctools.utils import TwoPlayersController, PlayerAction
 import pygame
 
 
-# Controller
+# Pause Controller
 class PauseController(TwoPlayersController):
     # Remapping
     button_dct = dict(TwoPlayersController.button_dct)
@@ -12,6 +15,7 @@ class PauseController(TwoPlayersController):
     button_dct[7] = PlayerAction.ESCAPE, False
 
 
+# Pause Model
 class PauseModel(MenuModel):
 
     @property
@@ -28,7 +32,7 @@ class PauseModel(MenuModel):
 
     def reset(self):
         del self.control.gamedata.score_dct
-        state = self.control.pop_state()
+        self.control.pop_state()
         self.control.register_next_state(self.control.first_state)
         return True
 
@@ -36,6 +40,7 @@ class PauseModel(MenuModel):
         raise SystemExit
 
 
+# Pause Sprite
 class PauseSprite(MenuSprite):
 
     # Entries
@@ -61,20 +66,21 @@ class PauseSprite(MenuSprite):
         return (self.screen_size * self.position_ratio).map(int)
 
 
-# View class
+# Pause View
 class PauseView(BaseView):
     shade_ratio = 0.5
     sprite_class_dct = {PauseModel: PauseSprite}
     size = 640, 360
 
     def create_background(self):
-        bgd = self.resource.scale(pygame.display.get_surface(), self.screen_size)
-        color = (255*self.shade_ratio,)*3
+        screen = pygame.display.get_surface()
+        bgd = self.resource.scale(screen, self.screen_size)
+        color = (255*self.shade_ratio,) * 3
         bgd.fill(color, special_flags=pygame.BLEND_MULT)
         return bgd
 
 
-# Loading state
+# Pause state
 class PauseState(BaseState):
     model_class = PauseModel
     controller_class = PauseController

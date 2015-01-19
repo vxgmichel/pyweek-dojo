@@ -1,9 +1,11 @@
 """Dojo game package for the Pyweek 19."""
 
+
 # Imports
-import os, pygame, dojo
+import pygame
 from mvctools import BaseControl
 from dojo.state import DojoMainState
+
 
 # Create the main control
 class Dojo(BaseControl):
@@ -20,7 +22,7 @@ class Dojo(BaseControl):
     resource_dir = "resource"
     version = "1.3.1"
 
-    def pre_run(self) :
+    def pre_run(self):
         """Hide the mouse"""
         super(Dojo, self).pre_run()
         pygame.mouse.set_visible(False)

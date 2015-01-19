@@ -1,11 +1,8 @@
 """Provide the view for the main game state."""
 
-# Imports
-from collections import defaultdict
-
 # Pygame imports
 import pygame as pg
-from pygame import Rect, Surface, transform, draw, Color
+from pygame import Surface, transform, draw
 
 # MVC tools imports
 from mvctools import BaseView, AutoSprite, Dir, xytuple
@@ -34,7 +31,7 @@ class RoomSprite(AutoSprite):
 
     string_dct = {0: ("CONTROLLER\nSTICK  \nJUMP-A \nRESET-Y", "center"),
                   1: ("P1\n-RDFG-\nJUMP-X\n/SPACE", "left"),
-                  2: ("P2\nARROWS\nJUMP-P\n/ENTER", "right"),}
+                  2: ("P2\nARROWS\nJUMP-P\n/ENTER", "right")}
 
     def init(self):
         """Initialize the sprite."""
@@ -48,7 +45,8 @@ class RoomSprite(AutoSprite):
                               alignment=alignment)
         if self.model.display_scores:
             ResetSprite(self)
-        
+
+
 # Title sprite
 class TitleSprite(WhiteTextSprite):
     """Title line."""
@@ -79,7 +77,7 @@ class ResetSprite(WhiteTextSprite):
     alignment = "center"
     interline = -2
     text_dict = ["JUMP!\n ", "REMATCH\n-U-"]
-    
+
     @property
     def text(self):
         """Text from the model."""
@@ -122,7 +120,7 @@ class ControlSprite(WhiteTextSprite):
     interline = -3
     pos_dct = {1: (0.23, 0.38),
                2: (0.78, 0.38),
-               0: (0.5, 0.7),}
+               0: (0.5, 0.7)}
 
     @property
     def pos(self):
@@ -204,10 +202,10 @@ class PlayerSprite(AutoSprite):
     # Filenames
 
     player_dct = {1: "player_1",
-                  2: "player_2",}
+                  2: "player_2"}
 
     ko_dct = {1: "ko/ko_player_1",
-              2: "ko/ko_player_2",}
+              2: "ko/ko_player_2"}
 
     # Direction to ressource
 
@@ -215,12 +213,12 @@ class PlayerSprite(AutoSprite):
                          Dir.UP:    (False, True,  0),
                          Dir.DOWN:  (False, False, 0),
                          Dir.LEFT:  (False, False, 3),
-                         Dir.RIGHT: (True,  False, 1),}
+                         Dir.RIGHT: (True,  False, 1)}
 
     perp_names = {1: "jumping/perp_player_1",
-                  2: "jumping/perp_player_2",}
+                  2: "jumping/perp_player_2"}
     diag_names = {1: "jumping/diag_player_1",
-                  2: "jumping/diag_player_2",}
+                  2: "jumping/diag_player_2"}
 
     # Directions
 
@@ -274,7 +272,7 @@ class PlayerSprite(AutoSprite):
         diag_image = self.resource.image.get(self.diag_names[pid])
         perp_image = self.resource.image.get(self.perp_names[pid])
         # Rotate
-        for r in (0,3):
+        for r in (0, 3):
             dct[self.perp_dir[r]] = transform.rotate(perp_image, r*90)
             dct[self.diag_dir[r]] = transform.rotate(diag_image, r*90)
         if pid == 2:
@@ -293,11 +291,13 @@ class PlayerSprite(AutoSprite):
             for v in range(2):
                 for r in range(4):
                     lst = [transform.rotate(transform.flip(img, h, v), 90*r)
-                               for img in resource]
+                           for img in resource]
                     for l in range(2):
                         if l:
-                            lst = [flash(image, not i/2) for i, image in enumerate(lst)]
-                        dct[h,v,r,l] = self.build_animation(lst, timer=timer)
+                            lst = [flash(image, not i/2)
+                                   for i, image in enumerate(lst)]
+                        key = h, v, r, l
+                        dct[key] = self.build_animation(lst, timer=timer)
         return dct
 
 
@@ -316,9 +316,9 @@ class RectSprite(AutoSprite):
     def get_image(self):
         """Draw the rectange on a transparent surface."""
         img = Surface(self.rect.size).convert_alpha()
-        img.fill((0,0,0,0), special_flags=pg.BLEND_RGBA_MULT)
+        img.fill((0, 0, 0, 0), special_flags=pg.BLEND_RGBA_MULT)
         draw.rect(img, self.model.color, img.get_rect(), 1)
-        img.fill((255,255,255,128), special_flags=pg.BLEND_RGBA_MULT)
+        img.fill((255, 255, 255, 128), special_flags=pg.BLEND_RGBA_MULT)
         return img
 
 
