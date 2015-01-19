@@ -154,15 +154,16 @@ class BaseControl(object):
         This initializes the video mode.
         Method to override.
         """
-        flag = pygame.FULLSCREEN if self.settings.fullscreen else 0
+        fs = self.settings.fullscreen
         size = self.settings.size
         try:
-            current_flag = pygame.display.get_surface().get_flags()
-            current_flag &= pygame.FULLSCREEN
+            current_fs = pygame.display.get_surface().get_flags()
+            current_fs = bool(current_fs & pygame.FULLSCREEN)
             current_size = pygame.display.get_surface().get_size()
-            if current_flag  != flag or current_size != size:
+            if current_fs  != fs or current_size != size:
                 raise pygame.error
         except (pygame.error, AttributeError) as e:
+            flag = pygame.FULLSCREEN if fs else 0
             pygame.display.set_mode(size, flag)
 
     def register_next_state(self, state):
