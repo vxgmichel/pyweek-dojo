@@ -6,8 +6,8 @@ A minimalistic versus fighting game (and a Pyweek 19 entry).
 ![Screenshot](/resource/image/screenshot.png?raw=true "ScreenShot")
 
 In one dojo, with one life, so one hit causes one win.
-The gameplay is based on the fact that you can grab the walls
-and ceiling of the room to jump on your opponent.
+The gameplay is based on the fact that you can hold on to 
+the walls and ceiling of the room to jump on your opponent.
 
 Requirement
 -----------
@@ -31,11 +31,11 @@ Or install it:
 Gameplay
 --------
 
- - Since it's a versus fighting game, you need to be two players.
+ - Two modes are available: 1 player or 2 players
  - The characters can't walk, run or hit. Only jump.
  - It is possible to jump higher by keeping the jump button pressed.
  - It is possible for a player to let himself down by pressing jump without direction.
- - The game switches to slow motion when players are close to hit each other.
+ - The game switches to bullet time when players are close to hit each other.
  - A player is considered KO when he's hit by the legs of the attacking player.
  - When players jump onto each other, they bounce.
  - To start a new match, reset by pressing "U".
@@ -57,29 +57,32 @@ Controls
  - Move : Hat or Axis
  - Jump : A (Button 0)
  - Reset: Y (Button 3)
+ - Menu:  Start (Button 7)
 
 **General:**
-  - Reset : U
-  - Quit : Escape
+  - Rematch: U
+  - Menu:    Escape
 
 Settings
 --------
 
-One can change the screen size, frame rate or switch
-to fullscreen mode by using the command line interface:
+One can change the screen size, scoring or switch to fullscreen in the 
+settings screen. Alternatively, it is possible to use the command line 
+interface:
 
     $ python Dojo.py -h # To display the complete description
 	$ python Dojo.py --size 800x600 --fps 50 --fullscreen # Example
 
 Here is the argument list:
-  - **-h, --help**   : show this help message and exit
-  - **--version**    : show program's version number and exit
-  - **--fps FPS**    : frame rate in frames per second (default is 60)
-  - **--fullscreen** : enable fullscreen mode (inactive when omitted)
-  - **--size SIZE**  : size of the screen (default is 1280x720)
+  - **-h, --help**    : show this help message and exit
+  - **--version**     : show program's version number and exit
+  - **--fps FPS**     : frame rate in frames per second (default is 60)
+  - **--fullscreen**  : enable fullscreen mode (inactive when omitted)
+  - **--size SIZE**   : size of the screen (default is 1280x720)
+  - **--scoring SCO** : scoring to win the game (default is 20)
 
 The window size is completely decoupled from the game size
-and the frame rate doesn't affect the actual speed of the game.
+and the frame rate doesn't affect the actual speed.
 
 MVC Tools
 ---------

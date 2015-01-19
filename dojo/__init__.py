@@ -30,8 +30,8 @@ class Dojo(BaseControl):
     Dojo: a minimalistic versus fighting game
     -----------------------------------------
     In one dojo, with one life, so one hit causes one win.
-    The gameplay is based on the fact that you can grab the walls
-    and ceiling of the room to jump on your opponent.
+    The gameplay is based on the fact that you can hold on to
+    the walls and ceiling of the room to jump on your opponent.
     """
 
     window_title = "Dojo"
