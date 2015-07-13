@@ -69,8 +69,9 @@ class MenuModel(BaseModel):
         if down:
             return self.cursor.get().activate()
 
-    def register_back(self):
-        self.cursor[-1].activate()
+    def register_back(self, down, player=None):
+        if down:
+             return self.cursor[-1].activate()
 
 
 # Entry sprite
