@@ -99,7 +99,7 @@ like resource handling and automatically updated sprites.
 Repository
 ----------
 
-These sources are available on [gitbub]
+These sources are available on [GitHub]
 (https://github.com/vxgmichel/pyweek-dojo).
 
 Windows executable
