@@ -289,7 +289,7 @@ class MappingController(BaseController):
         factors = xytuple(*self.axis_factors)
         try :
             raw_values = [self.joysticks[player-1].get_axis(i) for i in (0,1)]
-        except IndexError:
+        except (IndexError, pg.error):
             raw_values = 0,0
         return factors * map(self.axis_position, raw_values)
 
@@ -298,7 +298,7 @@ class MappingController(BaseController):
         factors = xytuple(*self.hat_factors)
         try:
             return factors * self.joysticks[player-1].get_hat(0)
-        except IndexError:
+        except (IndexError, pg.error):
             return factors * (0, 0)
 
     def get_key_action(self, key):
